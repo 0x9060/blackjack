@@ -1,2 +1,5 @@
-./client/node_modules/*
-./client/src/contracts/*
+# Packages
+client/node_modules/*
+
+# Build files
+client/src/contracts/*
