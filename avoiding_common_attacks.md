@@ -1,11 +1,9 @@
 # Avoiding common attacks
 
-See [avoiding_common_attacks.md](avoiding_common_attacks.md "Contract security") for details on the following risk mitigations:
-
 Some common attacks against this contract are:
 - Integer overflow/underflow
 - Reentrancy
-- Card deck randomness 
+- Deck shuffling randomness 
 - Card reveal scheme
 - Payment strategy
 
@@ -18,7 +16,15 @@ These are addressed below.
 ## Reentrancy
 
 **OpenZeppelin**'s `ReentrancyGuard` utility and checks-effects-interactions patterns
-## Commit reveal schemes for dealer hole card and remaining deck?
-## Source of randomness?
-## `PullPayment` strategy
 
+## Deck shuffling randomness 
+
+Source of randomness? Ensure not using timestamp?
+
+## Card reveal scheme
+
+Commit reveal schemes for dealer hole card and remaining deck?
+
+## Payment strategy
+
+`PullPayment` strategy?
