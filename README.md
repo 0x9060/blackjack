@@ -69,15 +69,15 @@ No Insurance
 
 ### Contract design
 
-See [design_pattern_decisions.md](design_pattern_decisions.md "Contract Design") for details on the following:
-- **OpenZeppelin**'s `Ownable` library for access control
-- Mortality and self-destruction
-- Upgrade proxy
+See [design_pattern_decisions.md](design_pattern_decisions.md "Design pattern decisions") for details on the following:
+- Access control
+- Upgradeability 
 - Circuit breakers
+- Mortality
 
 ### Contract security
 
-See [avoiding_common_attacks.md](avoiding_common_attacks.md "Avoiding common attacks") for details on mitigations to the following common attacks against this contract:
+See [avoiding_common_attacks.md](avoiding_common_attacks.md "Avoiding common attacks") for details on the following:
 - Integer overflow/underflow
 - Reentrancy
 - Deck shuffling randomness 
