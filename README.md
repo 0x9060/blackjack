@@ -77,7 +77,7 @@ See [design_pattern_decisions.md](design_pattern_decisions.md "Contract Design")
 
 ### Contract security
 
-See [avoiding_common_attacks.md](avoiding_common_attacks.md "Contract Security") for details on the following mitigations:
+See [avoiding_common_attacks.md](avoiding_common_attacks.md "Avoiding common attacks") for details on the following risk mitigations:
 - **OpenZeppelin**'s `SafeMath` library to prevent overflow / underflow
 - **OpenZeppelin**'s `ReentrancyGuard` utility and checks-effects-interactions patterns
 - Commit reveal schemes for dealer hole card and remaining deck?
