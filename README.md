@@ -50,7 +50,8 @@ npm run start
 ```
 
 ### Deployed addresses
-See [deployed_addresses.md](deployed_addresses.md "Deployed Addresses") for details on where to find this contract publicly.
+
+See [deployed_addresses.md](deployed_addresses.md "Deployed addresses") for details on where to find this contract publicly.
 
 ### Game rules
 
