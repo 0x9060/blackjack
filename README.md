@@ -55,18 +55,18 @@ See [deployed_addresses.md](deployed_addresses.md "Deployed addresses") for deta
 
 ### Game rules
 
-Single deck
-Shuffle after each hand
-Dealer hits on soft 17
+- Single deck
+- Shuffle after each hand
+- Dealer hits on soft 17
 
-Double any first two cards
-Double after split
-Split only once
-Cannot hit split aces
+- Double any first two cards
+- Double after split
+- Split only once
+- Cannot hit split aces
 
-Blackjack pays 3:2
-Late surrender refunds 1:2
-No Insurance
+- Blackjack pays 3:2
+- Late surrender refunds 1:2
+- No Insurance
 
 ### Contract design
 
@@ -97,8 +97,6 @@ This is a `truffle` project using a `React` front-end, built from the truffle re
 │   ├── public
 │   │   ├── favicon.ico
 │   │   ├── index.html
-│   │   ├── logo192.png
-│   │   ├── logo512.png
 │   │   ├── manifest.json
 │   │   └── robots.txt
 │   ├── README.md

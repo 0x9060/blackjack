@@ -6,7 +6,7 @@ import getWeb3 from "./getWeb3";
 import "./App.css";
 
 class App extends Component {
-    state = { storageValue: 0, web3: null, accounts: null, contract: null };
+    state = { storageValue: 0, web3: null, accounts: null, contract: null, game: null , playerHand: [] };
 
     componentDidMount = async () => {
         try {
@@ -24,9 +24,14 @@ class App extends Component {
                 deployedNetwork && deployedNetwork.address,
             );
 
+	    const gameNetwork = BlackjackContract.networks[networkId];
+	    const gameInstance = new web3.eth.Contract(
+		BlackjackContract.abi,
+		gameNetwork && gameNetwork.address,
+	    );
             // Set web3, accounts, and contract to the state, and then proceed with an
             // example of interacting with the contract's methods.
-            this.setState({ web3, accounts, contract: instance }, this.runExample);
+            this.setState({ web3, accounts, contract: instance, game: gameInstance }, this.runExample);
         } catch (error) {
             // Catch any errors for any of the above operations.
             alert(
@@ -49,6 +54,47 @@ class App extends Component {
         this.setState({ storageValue: response });
     };
 
+    initGame(event){
+        const { accounts, game } = this.state;
+
+        game.methods.initGame(0).send({ from: accounts[0] })
+    };
+
+    //newRound(event){
+    //    const { accounts, game } = this.state;
+
+    //    game.methods.newRound(0).send({ from: accounts[0] })
+    //        .then(result => {
+    //            return game.methods.getPlayerHand().call()
+    //        }).then(result => {
+    //		console.log(result)
+    //            return this.setState({ playerHand: result })
+    //        })
+    //};
+
+    newRound = async () => {
+        const { accounts, game } = this.state;
+
+        await game.methods.newRound(0).send({ from: accounts[0] });
+    	
+        const response = await game.methods.getPlayerHand().call();
+
+        this.setState({ playerHand: response });
+
+    	console.log(this.state.playerHand);
+    };
+
+    deal(event){
+        const { accounts, contract } = this.state;
+
+        var value = 3
+        contract.methods.set(value).send({ from: accounts[0] })
+            .then(result => {
+                return contract.methods.get().call()
+            }).then(result => {
+                return this.setState({ storageValue: result })
+            })
+    };
 
     hit(event){
         const { accounts, contract } = this.state;
@@ -90,8 +136,13 @@ class App extends Component {
                 <p>
                 Try changing the value stored on <strong>line 40</strong> of App.js.
                 </p>
+                <div>Player is: {this.state.playerHand}</div>
                 <div>The stored value is: {this.state.storageValue}</div>
 
+                <button onClick={this.initGame.bind(this)}>initGame</button>
+                <button onClick={this.newRound.bind(this)}>newRound</button>
+		<div/>
+                <button onClick={this.deal.bind(this)}>Deal</button>
                 <button onClick={this.hit.bind(this)}>Hit</button>
                 <button onClick={this.stand.bind(this)}>Stand</button>
                 </div>

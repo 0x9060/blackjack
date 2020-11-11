@@ -8,6 +8,7 @@ contract Blackjack {
     event NewRound(uint256 gameId, uint64 round, address player, uint256 bet);
     event CardDrawn(uint256 gameId, uint64 round, uint8 card, uint8 score, bool isDealer);
     event Result(uint256 gameId, uint64 round, uint256 payout, uint8 playerScore, uint8 dealerScore);
+    event PlayerHand(uint256 gameId, uint256[] playerHand);
 
     enum Stage {
                 SitDown,
@@ -44,6 +45,11 @@ contract Blackjack {
         seed = block.timestamp;
     }
 
+    function getPlayerHand() public view returns (uint256[] memory hand) {
+        Game storage game = games[msg.sender];
+	hand = game.player.hand;
+    }
+
     function getGameState() public view returns (uint256 gameId, uint64 startTime, uint64 round, Stage stage) {
         Game storage game = games[msg.sender];
         gameId = game.id;
@@ -75,7 +81,8 @@ contract Blackjack {
         delete game.dealer.hand;
     }
 
-    function initGame(uint256 _seed) public atStage(Stage.SitDown) {
+    //function initGame(uint256 _seed) public atStage(Stage.SitDown) {
+    function initGame(uint256 _seed) public {
         uint64 _now = uint64(block.timestamp);
         uint256 id = uint256(keccak256(abi.encodePacked(block.number, _now, _seed)));
 
@@ -100,6 +107,7 @@ contract Blackjack {
 
         nextStage(game);
         dealCards(game);
+        emit PlayerHand(game.id, game.player.hand);
     }
 
     function addBet() payable public {
