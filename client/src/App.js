@@ -6,7 +6,7 @@ import getWeb3 from "./getWeb3";
 import "./App.css";
 
 class App extends Component {
-    state = { storageValue: 0, web3: null, accounts: null, contract: null, game: null , playerHand: [] };
+    state = { storageValue: 0, web3: null, accounts: null, contract: null, game: null , dealerHand: [], playerHand: [] };
 
     componentDidMount = async () => {
         try {
@@ -24,11 +24,11 @@ class App extends Component {
                 deployedNetwork && deployedNetwork.address,
             );
 
-	    const gameNetwork = BlackjackContract.networks[networkId];
-	    const gameInstance = new web3.eth.Contract(
-		BlackjackContract.abi,
-		gameNetwork && gameNetwork.address,
-	    );
+            const gameNetwork = BlackjackContract.networks[networkId];
+            const gameInstance = new web3.eth.Contract(
+                BlackjackContract.abi,
+                gameNetwork && gameNetwork.address,
+            );
             // Set web3, accounts, and contract to the state, and then proceed with an
             // example of interacting with the contract's methods.
             this.setState({ web3, accounts, contract: instance, game: gameInstance }, this.runExample);
@@ -60,92 +60,86 @@ class App extends Component {
         game.methods.initGame(0).send({ from: accounts[0] })
     };
 
-    //newRound(event){
-    //    const { accounts, game } = this.state;
-
-    //    game.methods.newRound(0).send({ from: accounts[0] })
-    //        .then(result => {
-    //            return game.methods.getPlayerHand().call()
-    //        }).then(result => {
-    //		console.log(result)
-    //            return this.setState({ playerHand: result })
-    //        })
-    //};
-
     newRound = async () => {
         const { accounts, game } = this.state;
 
         await game.methods.newRound(0).send({ from: accounts[0] });
-    	
-        const response = await game.methods.getPlayerHand().call();
 
-        this.setState({ playerHand: response });
+        const responseDealer = await game.methods.getDealerHand().call();
+        const responsePlayer = await game.methods.getPlayerHand().call();
 
-    	console.log(this.state.playerHand);
+        //await game.methods.wolframDraw().call();
+
+        this.setState({ dealerHand: responseDealer, playerHand: responsePlayer });
     };
 
-    deal(event){
-        const { accounts, contract } = this.state;
+    hit = async () => {
+        const { accounts, game } = this.state;
 
-        var value = 3
-        contract.methods.set(value).send({ from: accounts[0] })
-            .then(result => {
-                return contract.methods.get().call()
-            }).then(result => {
-                return this.setState({ storageValue: result })
-            })
+        await game.methods.hit(0).send({ from: accounts[0] });
+
+        const responsePlayer = await game.methods.getPlayerHand().call();
+
+        this.setState({ playerHand: responsePlayer });
     };
 
-    hit(event){
-        const { accounts, contract } = this.state;
+    stand = async () => {
+        const { accounts, game } = this.state;
 
-        var value = 3
-        contract.methods.set(value).send({ from: accounts[0] })
-            .then(result => {
-                return contract.methods.get().call()
-            }).then(result => {
-                return this.setState({ storageValue: result })
-            })
-    };
+        await game.methods.stand(0).send({ from: accounts[0] });
 
-    stand(event){
-        const { accounts, contract } = this.state;
+        const responseDealer = await game.methods.getDealerHand().call();
 
-        var value = 7
-        contract.methods.set(value).send({ from: accounts[0] })
-            .then(result => {
-                return contract.methods.get().call()
-            }).then(result => {
-                return this.setState({ storageValue: result })
-            })
+        this.setState({ dealerHand: responseDealer });
     };
 
     render() {
+        const canSplit = this.state.playerHand.length == 2 && (this.state.playerHand[0] % 13) == (this.state.playerHand[1] % 13);
+        let splitButton;
+
+        if (canSplit) {
+            splitButton = <button onClick={this.hit.bind(this)}>Split</button>;
+        }
+
+        const canDoubleDown = this.state.playerHand.length == 2;
+        let doubleDownButton;
+
+        if (canDoubleDown) {
+            doubleDownButton = <button onClick={this.hit.bind(this)}>Double Down</button>;
+        }
+
         if (!this.state.web3) {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
+
+        const dealerCards = this.state.dealerHand.map(function(card,i){
+            return <td align="center" key={i}> {card} </td>;
+        });
+
+        const playerCards = this.state.playerHand.map(function(card,i){
+            return <td align="center" key={i}> {card % 13} </td>;
+        });
+
         return (
                 <div className="App">
-                <h1>Good to Go!</h1>
-                <p>Your Truffle Box is installed and ready.</p>
-                <h2>Smart Contract Example</h2>
-                <p>
-                If your contracts compiled and migrated successfully, below will show
-            a stored value of 5 (by default).
-                </p>
-                <p>
-                Try changing the value stored on <strong>line 40</strong> of App.js.
-                </p>
-                <div>Player is: {this.state.playerHand}</div>
-                <div>The stored value is: {this.state.storageValue}</div>
+                <h1>Blackjack Smart Contract dApp</h1>
+                <p/>
+                <div>Dealer Cards: <table align="center">{dealerCards}</table></div>
+                <p/>
+                <div>Your Cards: <table align="center">{playerCards}</table></div>
+                <p/>
 
                 <button onClick={this.initGame.bind(this)}>initGame</button>
-                <button onClick={this.newRound.bind(this)}>newRound</button>
-		<div/>
-                <button onClick={this.deal.bind(this)}>Deal</button>
-                <button onClick={this.hit.bind(this)}>Hit</button>
+                <button onClick={this.newRound.bind(this)}>Deal</button>
+                <p/>
                 <button onClick={this.stand.bind(this)}>Stand</button>
-                </div>
+                <button onClick={this.hit.bind(this)}>Hit</button>
+                {doubleDownButton}
+            {splitButton}
+
+                <p>No Insurance - Blackjack Pays 3:2 - Double After Split - No Resplit</p>
+
+            </div>
         );
     }
 }
