@@ -19,7 +19,7 @@ These are addressed below.
 
 ## Deck shuffling randomness 
 
-Source of randomness? Ensure not using timestamp?
+Source of randomness? Ensure not using timestamp? Provable API with Wolfram Alpha for random numbers on each request.
 
 ## Card reveal scheme
 
