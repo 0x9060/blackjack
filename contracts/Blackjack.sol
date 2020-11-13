@@ -1,7 +1,9 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
-pragma solidity 0.7.4;
+pragma solidity 0.6.12;
 
-contract Blackjack {
+import "./provableAPI_0.6.sol";
+
+contract Blackjack is usingProvable {
     //using SafeMath for uint256;
 
     event StageChanged(uint256 gameId, uint64 round, Stage newStage);
@@ -9,6 +11,8 @@ contract Blackjack {
     event CardDrawn(uint256 gameId, uint64 round, uint8 card, uint8 score, bool isDealer);
     event Result(uint256 gameId, uint64 round, uint256 payout, uint8 playerScore, uint8 dealerScore);
     event PlayerHand(uint256 gameId, uint256[] playerHand);
+    event LogNewWolframRandomDraw(uint256[] cards);
+    event LogNewProvableQuery(string description);
 
     enum Stage {
                 SitDown,
@@ -32,17 +36,40 @@ contract Blackjack {
         uint8 score;
     }
 
-    uint256 constant NUMBER_OF_DECKS = 8;
+    uint256 constant NUMBER_OF_DECKS = 1;
 
-    uint8[13] cardValues = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10];
+    uint8[52] cardValues = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10,
+			    11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10,
+			    11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10,
+			    11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10];
 
+    mapping(string => uint8) burnt; // dealt cards
+    
     mapping(address => Game) games;
 
+    uint256[] private randomCards;
+    
     uint256 seed;
-
-    constructor() {
+    
+    constructor() public {
 	// fix this, get off timestamp for seed
         seed = block.timestamp;
+    }
+
+    function __callback(bytes32 _myid, uint256[] memory _result) public {
+        require(msg.sender == provable_cbAddress());
+        randomCards = _result;
+        emit LogNewWolframRandomDraw(randomCards);	
+    }
+    
+    function wolframDraw() public payable {
+	emit LogNewProvableQuery("Provable query was sent, standing by for the answer...");
+	provable_query("WolframAlpha", "RandomInteger[{1,52},10]");
+    }
+    
+    function getDealerHand() public view returns (uint256[] memory hand) {
+        Game storage game = games[msg.sender];
+	hand = game.dealer.hand;
     }
 
     function getPlayerHand() public view returns (uint256[] memory hand) {
@@ -161,7 +188,7 @@ contract Blackjack {
         player.hand.push(card);
 
         // Recalculate player score
-        card = card % 52 % 13;
+        card = card % 52;
         if (card == 0) {
             player.score = recalculate(player);
         } else if (card > 10) {
@@ -176,7 +203,7 @@ contract Blackjack {
     function recalculate(Player storage player) private view returns (uint8 score) {
         uint8 numberOfAces = 0;
         for (uint8 i = 0; i < player.hand.length; i++) {
-            uint8 card = (uint8) (player.hand[i] % 52 % 13);
+            uint8 card = (uint8) (player.hand[i] % 52);
             score += cardValues[card];
             if (card == 0) numberOfAces++;
         }
