@@ -1,12 +1,26 @@
 import React, { Component } from "react";
-import SimpleStorageContract from "./contracts/SimpleStorage.json";
 import BlackjackContract from "./contracts/Blackjack.json";
 import getWeb3 from "./getWeb3";
 
 import "./App.css";
 
 class App extends Component {
-    state = { storageValue: 0, web3: null, accounts: null, contract: null, game: null , dealerHand: [], playerHand: [] };
+
+    //state = { web3: null, accounts: null, game: null , dealerHand: [], playerHand: [] };
+
+    constructor(){
+        super();
+        //this.state = {value: ''};
+        this.state = { betSize: '', web3: null, accounts: null, game: null , dealerHand: [], playerHand: [] };
+        this.onChange = this.onChange.bind(this)
+    }
+
+    onChange(e){
+        const re = /^[0-9\b]+$/;
+        if (e.target.value === '' || re.test(e.target.value)) {
+            this.setState({betSize: e.target.value})
+        }
+    }
 
     componentDidMount = async () => {
         try {
@@ -18,12 +32,6 @@ class App extends Component {
 
             // Get the contract instance.
             const networkId = await web3.eth.net.getId();
-            const deployedNetwork = SimpleStorageContract.networks[networkId];
-            const instance = new web3.eth.Contract(
-                SimpleStorageContract.abi,
-                deployedNetwork && deployedNetwork.address,
-            );
-
             const gameNetwork = BlackjackContract.networks[networkId];
             const gameInstance = new web3.eth.Contract(
                 BlackjackContract.abi,
@@ -31,7 +39,8 @@ class App extends Component {
             );
             // Set web3, accounts, and contract to the state, and then proceed with an
             // example of interacting with the contract's methods.
-            this.setState({ web3, accounts, contract: instance, game: gameInstance }, this.runExample);
+            this.setState({ web3, accounts, game: gameInstance });
+
         } catch (error) {
             // Catch any errors for any of the above operations.
             alert(
@@ -41,28 +50,10 @@ class App extends Component {
         }
     };
 
-    runExample = async () => {
-        const { accounts, contract } = this.state;
-
-        // Stores a given value, 5 by default.
-        await contract.methods.set(5).send({ from: accounts[0] });
-
-        // Get the value from the contract to prove it worked.
-        const response = await contract.methods.get().call();
-
-        // Update state with the result.
-        this.setState({ storageValue: response });
-    };
-
-    initGame(event){
-        const { accounts, game } = this.state;
-
-        game.methods.initGame(0).send({ from: accounts[0] })
-    };
-
     newRound = async () => {
         const { accounts, game } = this.state;
 
+        await game.methods.initGame(0).send({ from: accounts[0] })
         await game.methods.newRound(0).send({ from: accounts[0] });
 
         const responseDealer = await game.methods.getDealerHand().call();
@@ -123,19 +114,25 @@ class App extends Component {
         return (
                 <div className="App">
                 <h1>Blackjack Smart Contract dApp</h1>
-                <p/>
+                <br/><br/>
                 <div>Dealer Cards: <table align="center">{dealerCards}</table></div>
-                <p/>
+                <br/><br/>
                 <div>Your Cards: <table align="center">{playerCards}</table></div>
-                <p/>
+                <br/><br/><br/>
 
-                <button onClick={this.initGame.bind(this)}>initGame</button>
-                <button onClick={this.newRound.bind(this)}>Deal</button>
+                <input value={this.state.betSize} onChange={this.onChange}/>
+		<button onClick={this.newRound.bind(this)}>Deal</button>
+                <br/>
                 <p/>
                 <button onClick={this.stand.bind(this)}>Stand</button>
                 <button onClick={this.hit.bind(this)}>Hit</button>
                 {doubleDownButton}
             {splitButton}
+                <br/>
+                <br/>
+                <br/>
+                <hr style={{height: 2}}/>
+                <br/>
 
                 <p>No Insurance - Blackjack Pays 3:2 - Double After Split - No Resplit</p>
 
