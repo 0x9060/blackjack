@@ -51,10 +51,13 @@ class App extends Component {
     };
 
     newRound = async () => {
-        const { accounts, game } = this.state;
+        const { accounts, game, betSize } = this.state;
 
+	console.log(betSize)
+ 
         await game.methods.initGame(0).send({ from: accounts[0] })
         await game.methods.newRound(0).send({ from: accounts[0] });
+        await game.methods.addBet().send({ from: accounts[0], value: this.state.betSize });
 
         const responseDealer = await game.methods.getDealerHand().call();
         const responsePlayer = await game.methods.getPlayerHand().call();
@@ -85,14 +88,14 @@ class App extends Component {
     };
 
     render() {
-        const canSplit = this.state.playerHand.length == 2 && (this.state.playerHand[0] % 13) == (this.state.playerHand[1] % 13);
+        const canSplit = this.state.playerHand.length === 2 && (this.state.playerHand[0] % 13) === (this.state.playerHand[1] % 13);
         let splitButton;
 
         if (canSplit) {
             splitButton = <button onClick={this.hit.bind(this)}>Split</button>;
         }
 
-        const canDoubleDown = this.state.playerHand.length == 2;
+        const canDoubleDown = this.state.playerHand.length === 2;
         let doubleDownButton;
 
         if (canDoubleDown) {
@@ -104,30 +107,34 @@ class App extends Component {
         }
 
         const dealerCards = this.state.dealerHand.map(function(card,i){
-            return <td align="center" key={i}> {card} </td>;
+            return <td align="center" border="20px" key={i}> {card} </td>;
         });
 
         const playerCards = this.state.playerHand.map(function(card,i){
-            return <td align="center" key={i}> {card % 13} </td>;
+            return <td align="center" border="20px" key={i}> {card} </td>;
         });
 
         return (
                 <div className="App">
                 <h1>Blackjack Smart Contract dApp</h1>
                 <br/><br/>
-                <div>Dealer Cards: <table align="center">{dealerCards}</table></div>
+                <div>Dealer Cards: <table align="center"><tbody><tr>{dealerCards}</tr></tbody></table></div>
                 <br/><br/>
-                <div>Your Cards: <table align="center">{playerCards}</table></div>
+                <div>Your Cards: <table align="center"><tbody><tr>{playerCards}</tr></tbody></table></div>
                 <br/><br/><br/>
 
-                <input value={this.state.betSize} onChange={this.onChange}/>
-		<button onClick={this.newRound.bind(this)}>Deal</button>
+                Place your bet: <input value={this.state.betSize} onChange={this.onChange}/> wei
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button onClick={this.newRound.bind(this)}>Deal</button>
                 <br/>
                 <p/>
                 <button onClick={this.stand.bind(this)}>Stand</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <button onClick={this.hit.bind(this)}>Hit</button>
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 {doubleDownButton}
-            {splitButton}
+		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                {splitButton}
                 <br/>
                 <br/>
                 <br/>
