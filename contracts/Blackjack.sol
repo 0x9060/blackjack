@@ -11,7 +11,7 @@ contract Blackjack is usingProvable {
     event CardDrawn(uint256 gameId, uint64 round, uint8 card, uint8 score, bool isDealer);
     event Result(uint256 gameId, uint64 round, uint256 payout, uint8 playerScore, uint8 dealerScore);
     event PlayerHand(uint256 gameId, uint256[] playerHand);
-    event LogNewWolframRandomDraw(uint256[] cards);
+    event LogNewWolframRandomDraw(string cards);
     event LogNewProvableQuery(string description);
 
     enum Stage {
@@ -38,16 +38,13 @@ contract Blackjack is usingProvable {
 
     uint256 constant NUMBER_OF_DECKS = 1;
 
-    uint8[52] cardValues = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10,
-			    11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10,
-			    11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10,
-			    11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10];
+    uint8[52] cardValues = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10];
 
     mapping(string => uint8) burnt; // dealt cards
     
     mapping(address => Game) games;
 
-    uint256[] private randomCards;
+    string private randomCards;
     
     uint256 seed;
     
@@ -56,7 +53,7 @@ contract Blackjack is usingProvable {
         seed = block.timestamp;
     }
 
-    function __callback(bytes32 _myid, uint256[] memory _result) public {
+    function __callback(bytes32, string memory _result) public override {
         require(msg.sender == provable_cbAddress());
         randomCards = _result;
         emit LogNewWolframRandomDraw(randomCards);	
@@ -176,7 +173,6 @@ contract Blackjack is usingProvable {
 	// fix this, get off timestamp for seed
         uint64 _now = uint64(block.timestamp);
 
-        // Drawing card by generating a random index in a set of 8 deck
         //uint256 card = ((player.seed * seed).add(_now)) % (NUMBER_OF_DECKS*52);
         uint256 card = ((player.seed * seed) + _now) % (NUMBER_OF_DECKS*52);
 
@@ -188,7 +184,7 @@ contract Blackjack is usingProvable {
         player.hand.push(card);
 
         // Recalculate player score
-        card = card % 52;
+        card = card % 52 % 13;
         if (card == 0) {
             player.score = recalculate(player);
         } else if (card > 10) {
@@ -203,7 +199,7 @@ contract Blackjack is usingProvable {
     function recalculate(Player storage player) private view returns (uint8 score) {
         uint8 numberOfAces = 0;
         for (uint8 i = 0; i < player.hand.length; i++) {
-            uint8 card = (uint8) (player.hand[i] % 52);
+            uint8 card = (uint8) (player.hand[i] % 52 % 13);
             score += cardValues[card];
             if (card == 0) numberOfAces++;
         }

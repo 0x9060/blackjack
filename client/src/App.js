@@ -53,8 +53,6 @@ class App extends Component {
     newRound = async () => {
         const { accounts, game, betSize } = this.state;
 
-	console.log(betSize)
- 
         await game.methods.initGame(0).send({ from: accounts[0] })
         await game.methods.newRound(0).send({ from: accounts[0] });
         await game.methods.addBet().send({ from: accounts[0], value: this.state.betSize });
