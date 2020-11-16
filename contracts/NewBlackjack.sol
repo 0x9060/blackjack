@@ -3,21 +3,22 @@ pragma solidity 0.6.12;
 
 import "./provableAPI_0.6.sol";
 
-contract Blackjack is usingProvable {
+contract NewBlackjack is usingProvable {
     //using SafeMath for uint256;
 
     event StageChanged(uint256 gameId, uint64 round, Stage newStage);
     event NewRound(uint256 gameId, uint64 round, address player, uint256 bet);
     event CardDrawn(uint256 gameId, uint64 round, uint8 card, uint8 score, bool isDealer);
     event Result(uint256 gameId, uint64 round, uint256 payout, uint8 playerScore, uint8 dealerScore);
-    event PlayerHand(uint256 gameId, uint256[] playerHand);
+    event PlayerHand(uint256 gameId, uint256[] playerHand, uint256[] playerSplitHand);
     event LogNewWolframRandomDraw(string cards);
     event LogNewProvableQuery(string description);
 
     enum Stage {
                 SitDown,
                 Bet,
-                Play
+                PlayHand,
+                PlaySplitHand
     }
 
     struct Game {
@@ -27,13 +28,16 @@ contract Blackjack is usingProvable {
         Stage stage;
         Player dealer;
         Player player;
+        Player splitPlayer;
     }
 
     struct Player {
         uint256 bet;
         uint256 seed;
-        uint256[] hand;
         uint8 score;
+        bool doubleDown;
+        bool actionClosed;
+        uint256[] hand;
     }
 
     uint256 constant NUMBER_OF_DECKS = 1;
@@ -41,25 +45,33 @@ contract Blackjack is usingProvable {
     uint8[52] cardValues = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10];
 
     mapping(string => uint8) burnt; // dealt cards
-    
+
     mapping(address => Game) games;
 
     string private randomCards;
-    
+
     uint256 seed;
-    
+
     constructor() public {
-	// fix this, get off timestamp for seed
+        // fix this, get off timestamp for seed
         seed = block.timestamp;
     }
 
     fallback() external payable {}
-    
+
     receive() external payable {}
 
     modifier atStage(Stage _stage) {
         require(
                 games[msg.sender].stage == _stage,
+                "Function cannot be called at this time."
+                );
+        _;
+    }
+
+    modifier eitherStage(Stage _stage1, Stage _stage2) {
+        require(
+                games[msg.sender].stage == _stage1 || games[msg.sender].stage == _stage2,
                 "Function cannot be called at this time."
                 );
         _;
@@ -73,40 +85,46 @@ contract Blackjack is usingProvable {
     function reset(Game storage game) internal {
         game.stage = Stage.Bet;
         emit StageChanged(game.id, game.round, game.stage);
+
         game.player.bet = 0;
+
         game.player.score = 0;
-        game.dealer.score = 0;
         delete game.player.hand;
+
+        game.splitPlayer.score = 0;
+        delete game.splitPlayer.hand;
+
+        game.dealer.score = 0;
         delete game.dealer.hand;
     }
 
-    //function initGame(uint256 _seed) public atStage(Stage.SitDown) {
-    function initGame(uint256 _seed) public {
+    function newRound(uint256 _seed) public payable atStage(Stage.Bet) {
         uint64 _now = uint64(block.timestamp);
         uint256 id = uint256(keccak256(abi.encodePacked(block.number, _now, _seed)));
 
         seed += _seed;
 
-        Player memory player;
         Player memory dealer;
-        games[msg.sender] = Game(id, _now, 0, Stage.SitDown, dealer, player);
 
-        nextStage(games[msg.sender]);
-    }
+        Player memory player;
+        player.bet = msg.value;
 
-    function newRound(uint256 _seed) public payable atStage(Stage.Bet) {
+        Player memory splitPlayer; // placeholder
+
+        games[msg.sender] = Game(id, _now, 0, Stage.SitDown, dealer, player, splitPlayer);
+
         Game storage game = games[msg.sender];
 
-        seed += _seed;
         game.dealer.seed = _seed;
         game.player.seed = _seed;
+        game.splitPlayer.seed = _seed;
         game.round++;
 
         emit NewRound(game.id, game.round, msg.sender, msg.value);
 
         nextStage(game);
         dealCards(game);
-        emit PlayerHand(game.id, game.player.hand);
+        emit PlayerHand(game.id, game.player.hand, game.splitPlayer.hand);
     }
 
     function addBet() payable public {
@@ -115,37 +133,86 @@ contract Blackjack is usingProvable {
         player.bet = player.bet + msg.value;
     }
 
-    function hit(uint256 _seed) public atStage(Stage.Play) {
-        Game storage game = games[msg.sender];
-        if (game.player.score > 21) {
-            revert();
-        }
+    function split() public payable atStage(Stage.PlayHand) {
 
-        seed += _seed;
+        Game storage game = games[msg.sender];
+
+        require(msg.value == game.player.bet, "Must match bet to split");
+        require(game.player.hand.length == 2, "Can only split two cards");
+        require(game.splitPlayer.hand.length == 0, "Can only split once");
+        require((game.player.hand[0] % 13) == (game.player.hand[1] % 13), "First two cards must be same");
+
+        game.splitPlayer.hand[0] = game.player.hand[0];
+        game.player.hand.pop();
 
         drawCard(game, game.player);
-        game.player.score = recalculate(game.player);
+        drawCard(game, game.splitPlayer);
+        emit PlayerHand(game.id, game.player.hand, game.splitPlayer.hand);
 
-        if (game.player.score >= 21) {
-            concludeGame(game);
-        }
+        game.player.score = recalculate(game.player);
+        game.splitPlayer.score = recalculate(game.splitPlayer);
+
+        game.splitPlayer.bet = msg.value;
     }
 
-    function stand(uint256 _seed) public atStage(Stage.Play) {
+    function hit(uint256 _seed) public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
+        Game storage game = games[msg.sender];
+
+        require(game.player.score < 21 || (game.splitPlayer.score < 21 && game.splitPlayer.hand.length > 0));
+
+        seed += _seed;
+
+	if(game.stage == Stage.PlayHand) {
+	    
+	    drawCard(game, game.player);
+	    game.player.score = recalculate(game.player);
+
+	    if (game.player.score >= 21) {
+		nextStage(game);
+
+		if (game.splitPlayer.hand.length == 0){
+		    nextStage(game);
+		    concludeGame(game);
+		}
+		
+	    }
+	    
+	} else {
+
+	    drawCard(game, game.splitPlayer);
+	    game.splitPlayer.score = recalculate(game.splitPlayer);
+
+	    if (game.splitPlayer.score >= 21) {
+		nextStage(game);
+		concludeGame(game);
+	    }
+	    
+	}
+	
+    }
+
+    function stand(uint256 _seed) public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
         Game storage game = games[msg.sender];
         seed += _seed;
-        concludeGame(game);
+
+
+	if(game.stage == Stage.PlayHand && game.splitPlayer.hand.length == 0 || game.stage == Stage.PlaySplitHand) {
+	    nextStage(game);
+	    concludeGame(game);
+	}
+
+	nextStage(game);
     }
 
-    function dealCards(Game storage game) private {
+    function dealCards(Game storage game) private { // better called startGame?
         drawCard(game, game.player);
         drawCard(game, game.dealer);
         drawCard(game, game.player);
     }
 
     /* TODO: Check for card repeatation */
-    function drawCard(Game storage game, Player storage player) private returns (uint256) {
-	// fix this, get off timestamp for seed
+    function drawCard(Game storage game, Player storage player) private {
+        // fix this, get off timestamp for seed
         uint64 _now = uint64(block.timestamp);
 
         //uint256 card = ((player.seed * seed).add(_now)) % (NUMBER_OF_DECKS*52);
@@ -155,20 +222,10 @@ contract Blackjack is usingProvable {
         player.seed = uint256(keccak256(abi.encodePacked(player.seed, card, _now)));
         seed = uint256(keccak256(abi.encodePacked(seed, card, _now)));
 
-        // Push the card index to player hand
         player.hand.push(card);
-
-        // Recalculate player score
-        card = card % 52 % 13;
-        if (card == 0) {
-            player.score = recalculate(player);
-        } else if (card > 10) {
-            player.score += cardValues[card];
-        }
+        player.score = recalculate(player);
 
         emit CardDrawn(game.id, game.round, uint8(card % 52), player.score, player.bet == 0);
-
-        return card;
     }
 
     function recalculate(Player storage player) private view returns (uint8 score) {
@@ -234,18 +291,31 @@ contract Blackjack is usingProvable {
 
 
     /// Getters:
-    
-    function getDealerHand() public view returns (uint256[] memory hand) {
+
+    function getDealerHand()
+        public
+        view
+        returns (uint256[] memory hand)
+    {
         Game storage game = games[msg.sender];
-	hand = game.dealer.hand;
+        hand = game.dealer.hand;
     }
 
-    function getPlayerHand() public view returns (uint256[] memory hand) {
+    function getPlayerHand()
+        public
+        view
+        returns (uint256[] memory hand,uint256[] memory splitHand)
+    {
         Game storage game = games[msg.sender];
-	hand = game.player.hand;
+        hand = game.player.hand;
+        splitHand = game.splitPlayer.hand;
     }
 
-    function getGameState() public view returns (uint256 gameId, uint64 startTime, uint64 round, Stage stage) {
+    function getGameState()
+        public
+        view
+        returns (uint256 gameId, uint64 startTime, uint64 round, Stage stage)
+    {
         Game storage game = games[msg.sender];
         gameId = game.id;
         startTime = game.startTime;
