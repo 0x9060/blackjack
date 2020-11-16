@@ -18,7 +18,8 @@ contract NewBlackjack is usingProvable {
                 SitDown,
                 Bet,
                 PlayHand,
-                PlaySplitHand
+                PlaySplitHand,
+		ConcludeHands
     }
 
     struct Game {
@@ -36,7 +37,6 @@ contract NewBlackjack is usingProvable {
         uint256 seed;
         uint8 score;
         bool doubleDown;
-        bool actionClosed;
         uint256[] hand;
     }
 
@@ -79,6 +79,11 @@ contract NewBlackjack is usingProvable {
 
     function nextStage(Game storage game) internal {
         game.stage = Stage(uint(game.stage) + 1);
+
+	if(game.stage == Stage.PlaySplitHand && game.splitPlayer.hand.length == 0) {
+	    game.stage = Stage(uint(game.stage) + 1);
+	}
+	
         emit StageChanged(game.id, game.round, game.stage);
     }
 
@@ -137,13 +142,13 @@ contract NewBlackjack is usingProvable {
 
         Game storage game = games[msg.sender];
 
-        require(msg.value == game.player.bet, "Must match bet to split");
-        require(game.player.hand.length == 2, "Can only split two cards");
+        require(msg.value == game.player.bet, "Must match original bet to split");
+        require(game.player.hand.length == 2, "Can only split with two cards");
         require(game.splitPlayer.hand.length == 0, "Can only split once");
         require((game.player.hand[0] % 13) == (game.player.hand[1] % 13), "First two cards must be same");
 
-        game.splitPlayer.hand[0] = game.player.hand[0];
-        game.player.hand.pop();
+        game.splitPlayer.hand.push(game.player.hand[1]);
+	delete game.player.hand[1];
 
         drawCard(game, game.player);
         drawCard(game, game.splitPlayer);
@@ -155,10 +160,34 @@ contract NewBlackjack is usingProvable {
         game.splitPlayer.bet = msg.value;
     }
 
+    function doubleDown() public payable eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
+        Game storage game = games[msg.sender];
+
+	require((game.player.hand.length == 2 && game.stage == Stage.PlayHand) ||
+		(game.splitPlayer.hand.length == 2 && game.stage == Stage.PlaySplitHand),
+		"Can only double down with two cards");
+        require(msg.value <= game.player.bet, "Bet cannot be greater than original bet");
+
+	if (game.stage == Stage.PlayHand) {
+	    drawCard(game, game.player);
+	    game.player.bet += msg.value;
+	    game.player.score = recalculate(game.player);
+	    
+	} else if (game.stage == Stage.PlaySplitHand) {
+	    drawCard(game, game.splitPlayer);
+	    game.splitPlayer.bet += msg.value;
+	    game.splitPlayer.score = recalculate(game.splitPlayer);
+
+	}
+
+	nextStage(game);
+    }
+
+    
     function hit(uint256 _seed) public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
         Game storage game = games[msg.sender];
 
-        require(game.player.score < 21 || (game.splitPlayer.score < 21 && game.splitPlayer.hand.length > 0));
+        require(game.player.score < 21  && game.stage == Stage.PlayHand || (game.splitPlayer.score < 21 && game.stage == Stage.PlaySplitHand));
 
         seed += _seed;
 
@@ -242,7 +271,7 @@ contract NewBlackjack is usingProvable {
     }
 
     function concludeGame(Game storage game) private {
-        uint256 payout = calculatePayout(game);
+        uint256 payout = calculatePayout(game, game.player) + calculatePayout(game, game.splitPlayer);
         if (payout != 0) {
             msg.sender.transfer(payout);
         }
@@ -251,8 +280,7 @@ contract NewBlackjack is usingProvable {
         reset(game);
     }
 
-    function calculatePayout(Game storage game) private returns (uint256 payout) {
-        Player memory player = game.player;
+    function calculatePayout(Game storage game, Player storage player) private returns (uint256 payout) {
         Player memory dealer = game.dealer;
         // Player busted
         if (player.score > 21) {
