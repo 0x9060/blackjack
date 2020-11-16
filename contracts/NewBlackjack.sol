@@ -13,9 +13,9 @@ contract NewBlackjack is usingProvable {
     event PlayerHand(uint256 gameId, uint256[] playerHand, uint256[] playerSplitHand);
     event LogNewWolframRandomDraw(string cards);
     event LogNewProvableQuery(string description);
+    event Received(address, uint);
 
     enum Stage {
-                SitDown,
                 Bet,
                 PlayHand,
                 PlaySplitHand,
@@ -57,9 +57,11 @@ contract NewBlackjack is usingProvable {
         seed = block.timestamp;
     }
 
-    fallback() external payable {}
+    fallback() external {}
 
-    receive() external payable {}
+    receive() external payable {
+	emit Received(msg.sender, msg.value);
+    }
 
     modifier atStage(Stage _stage) {
         require(
@@ -103,7 +105,7 @@ contract NewBlackjack is usingProvable {
         delete game.dealer.hand;
     }
 
-    function newRound(uint256 _seed) public payable atStage(Stage.Bet) {
+    function newRound(uint256 _seed) public payable {
         uint64 _now = uint64(block.timestamp);
         uint256 id = uint256(keccak256(abi.encodePacked(block.number, _now, _seed)));
 
@@ -116,7 +118,7 @@ contract NewBlackjack is usingProvable {
 
         Player memory splitPlayer; // placeholder
 
-        games[msg.sender] = Game(id, _now, 0, Stage.SitDown, dealer, player, splitPlayer);
+        games[msg.sender] = Game(id, _now, 0, Stage.Bet, dealer, player, splitPlayer);
 
         Game storage game = games[msg.sender];
 
@@ -130,12 +132,6 @@ contract NewBlackjack is usingProvable {
         nextStage(game);
         dealCards(game);
         emit PlayerHand(game.id, game.player.hand, game.splitPlayer.hand);
-    }
-
-    function addBet() payable public {
-        Player memory player = games[msg.sender].player;
-        //player.bet = player.bet.add(msg.value);
-        player.bet = player.bet + msg.value;
     }
 
     function split() public payable atStage(Stage.PlayHand) {
