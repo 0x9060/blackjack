@@ -19,7 +19,7 @@ contract NewBlackjack is usingProvable {
                 Bet,
                 PlayHand,
                 PlaySplitHand,
-		ConcludeHands
+                ConcludeHands
     }
 
     struct Game {
@@ -60,7 +60,7 @@ contract NewBlackjack is usingProvable {
     fallback() external {}
 
     receive() external payable {
-	emit Received(msg.sender, msg.value);
+        emit Received(msg.sender, msg.value);
     }
 
     modifier atStage(Stage _stage) {
@@ -82,10 +82,10 @@ contract NewBlackjack is usingProvable {
     function nextStage(Game storage game) internal {
         game.stage = Stage(uint(game.stage) + 1);
 
-	if(game.stage == Stage.PlaySplitHand && game.splitPlayer.hand.length == 0) {
-	    game.stage = Stage(uint(game.stage) + 1);
-	}
-	
+        if(game.stage == Stage.PlaySplitHand && game.splitPlayer.hand.length == 0) {
+            game.stage = Stage(uint(game.stage) + 1);
+        }
+
         emit StageChanged(game.id, game.round, game.stage);
     }
 
@@ -144,7 +144,7 @@ contract NewBlackjack is usingProvable {
         require((game.player.hand[0] % 13) == (game.player.hand[1] % 13), "First two cards must be same");
 
         game.splitPlayer.hand.push(game.player.hand[1]);
-	delete game.player.hand[1];
+        delete game.player.hand[1];
 
         drawCard(game, game.player);
         drawCard(game, game.splitPlayer);
@@ -159,27 +159,27 @@ contract NewBlackjack is usingProvable {
     function doubleDown() public payable eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
         Game storage game = games[msg.sender];
 
-	require((game.player.hand.length == 2 && game.stage == Stage.PlayHand) ||
-		(game.splitPlayer.hand.length == 2 && game.stage == Stage.PlaySplitHand),
-		"Can only double down with two cards");
+        require((game.player.hand.length == 2 && game.stage == Stage.PlayHand) ||
+                (game.splitPlayer.hand.length == 2 && game.stage == Stage.PlaySplitHand),
+                "Can only double down with two cards");
         require(msg.value <= game.player.bet, "Bet cannot be greater than original bet");
 
-	if (game.stage == Stage.PlayHand) {
-	    drawCard(game, game.player);
-	    game.player.bet += msg.value;
-	    game.player.score = recalculate(game.player);
-	    
-	} else if (game.stage == Stage.PlaySplitHand) {
-	    drawCard(game, game.splitPlayer);
-	    game.splitPlayer.bet += msg.value;
-	    game.splitPlayer.score = recalculate(game.splitPlayer);
+        if (game.stage == Stage.PlayHand) {
+            drawCard(game, game.player);
+            game.player.bet += msg.value;
+            game.player.score = recalculate(game.player);
 
-	}
+        } else if (game.stage == Stage.PlaySplitHand) {
+            drawCard(game, game.splitPlayer);
+            game.splitPlayer.bet += msg.value;
+            game.splitPlayer.score = recalculate(game.splitPlayer);
 
-	nextStage(game);
+        }
+
+        nextStage(game);
     }
 
-    
+
     function hit(uint256 _seed) public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
         Game storage game = games[msg.sender];
 
@@ -187,33 +187,33 @@ contract NewBlackjack is usingProvable {
 
         seed += _seed;
 
-	if(game.stage == Stage.PlayHand) {
-	    
-	    drawCard(game, game.player);
-	    game.player.score = recalculate(game.player);
+        if(game.stage == Stage.PlayHand) {
 
-	    if (game.player.score >= 21) {
-		nextStage(game);
+            drawCard(game, game.player);
+            game.player.score = recalculate(game.player);
 
-		if (game.splitPlayer.hand.length == 0){
-		    nextStage(game);
-		    concludeGame(game);
-		}
-		
-	    }
-	    
-	} else {
+            if (game.player.score >= 21) {
+                nextStage(game);
 
-	    drawCard(game, game.splitPlayer);
-	    game.splitPlayer.score = recalculate(game.splitPlayer);
+                if (game.splitPlayer.hand.length == 0){
+                    nextStage(game);
+                    concludeGame(game);
+                }
 
-	    if (game.splitPlayer.score >= 21) {
-		nextStage(game);
-		concludeGame(game);
-	    }
-	    
-	}
-	
+            }
+
+        } else {
+
+            drawCard(game, game.splitPlayer);
+            game.splitPlayer.score = recalculate(game.splitPlayer);
+
+            if (game.splitPlayer.score >= 21) {
+                nextStage(game);
+                concludeGame(game);
+            }
+
+        }
+
     }
 
     function stand(uint256 _seed) public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
@@ -221,12 +221,12 @@ contract NewBlackjack is usingProvable {
         seed += _seed;
 
 
-	if(game.stage == Stage.PlayHand && game.splitPlayer.hand.length == 0 || game.stage == Stage.PlaySplitHand) {
-	    nextStage(game);
-	    concludeGame(game);
-	}
+        if(game.stage == Stage.PlayHand && game.splitPlayer.hand.length == 0 || game.stage == Stage.PlaySplitHand) {
+            nextStage(game);
+            concludeGame(game);
+        }
 
-	nextStage(game);
+        nextStage(game);
     }
 
     function dealCards(Game storage game) private { // better called startGame?
@@ -286,9 +286,9 @@ contract NewBlackjack is usingProvable {
 
             // Player has BlackJack but dealer does not.
             if (player.score == 21 && player.hand.length == 2 && !dealerHasBJ) {
-                // Pays 2 to 1
-                payout = player.bet * 3;
-            } else if (player.score > dealer.score || dealer.score > 21) {
+                // Pays 3 to 2
+                payout = player.bet * 5 / 2;
+            } else if (player.score > dealer.score || dealer.score >= 21) {
                 payout = player.bet * 2;
             } else if (player.score == dealer.score) {
                 payout = player.bet;
@@ -328,7 +328,7 @@ contract NewBlackjack is usingProvable {
     function getPlayerHand()
         public
         view
-        returns (uint256[] memory hand,uint256[] memory splitHand)
+        returns (uint256[] memory hand, uint256[] memory splitHand)
     {
         Game storage game = games[msg.sender];
         hand = game.player.hand;
