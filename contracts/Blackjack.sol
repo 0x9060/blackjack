@@ -141,7 +141,7 @@ contract Blackjack is usingProvable {
         require(msg.value == game.player.bet, "Must match original bet to split");
         require(game.player.hand.length == 2, "Can only split with two cards");
         require(game.splitPlayer.hand.length == 0, "Can only split once");
-        require((game.player.hand[0] % 13) == (game.player.hand[1] % 13), "First two cards must be same");
+        require(cardValues[game.player.hand[0] % 13] == cardValues[game.player.hand[1] % 13], "First two cards must be same");
 
         game.splitPlayer.hand.push(game.player.hand[1]);
         delete game.player.hand[1];

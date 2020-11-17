@@ -108,7 +108,11 @@ class App extends Component {
     };
 
     render() {
-        const canSplit = this.state.playerHand.length === 2 && (this.state.playerHand[0] % 13) === (this.state.playerHand[1] % 13);
+	const rankStrings = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
+	const rankValues = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
+	const suitStrings = [String.fromCharCode(9827), String.fromCharCode(9830), String.fromCharCode(9829), String.fromCharCode(9824)]
+
+        const canSplit = this.state.playerHand.length === 2 && (rankValues[this.state.playerHand[0] % 13]) === (rankValues[this.state.playerHand[1] % 13]);
         let splitButton;
 
         if (canSplit) {
@@ -125,9 +129,6 @@ class App extends Component {
         if (!this.state.web3) {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
-
-	const rankStrings = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
-	const suitStrings = [String.fromCharCode(9827), String.fromCharCode(9830), String.fromCharCode(9829), String.fromCharCode(9824)]
 
         const dealerCards = this.state.dealerHand.map(function(card,i){
             return <td align="center" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
