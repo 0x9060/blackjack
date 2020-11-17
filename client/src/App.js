@@ -70,10 +70,12 @@ class App extends Component {
 
         await game.methods.split().send({ from: playerAccount, value: this.state.betSize });
 
-        const responseDealer = await game.methods.getDealerHand().call();
         const responsePlayer = await game.methods.getPlayerHand().call();
 
-        this.setState({ dealerHand: responseDealer, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
+	console.log(responsePlayer.hand);
+	console.log(responsePlayer.splitHand);
+	
+        this.setState({ playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
     };
 
     doubleDown = async () => {
@@ -113,12 +115,22 @@ class App extends Component {
 	const suitStrings = [String.fromCharCode(9827), String.fromCharCode(9830), String.fromCharCode(9829), String.fromCharCode(9824)]
 
         const canSplit = this.state.playerHand.length === 2 && (rankValues[this.state.playerHand[0] % 13]) === (rankValues[this.state.playerHand[1] % 13]);
-        let splitButton;
+	const hasSplit = this.state.splitHand.length > 0;
 
+        let splitButton;
         if (canSplit) {
             splitButton = <button onClick={this.split.bind(this)}>Split</button>;
         }
+	
+        const playerSplitCards = this.state.splitHand.map(function(card,i){
+            return <td align="center" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
+        });
 
+	let splitHand;
+	if (hasSplit) {
+	    splitHand = <div><table align="center"><tbody><tr>{playerSplitCards}</tr></tbody></table></div>;
+	}
+	
         const canDoubleDown = this.state.playerHand.length === 2;
         let doubleDownButton;
 
@@ -144,7 +156,12 @@ class App extends Component {
                 <br/><br/>
                 <div>Dealer Cards: <table align="center"><tbody><tr>{dealerCards}</tr></tbody></table></div>
                 <br/><br/>
-                <div>Your Cards: <table align="center"><tbody><tr>{playerCards}</tr></tbody></table></div>
+                <div>Your Cards:
+		<table align="center"><tbody><tr>{playerCards}</tr></tbody></table>
+		<br/><br/>
+	    
+	        {splitHand}
+	        </div>
                 <br/><br/><br/>
 
                 Place your bet: <input value={this.state.betSize} onChange={this.onChange}/> wei

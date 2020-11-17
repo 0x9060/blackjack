@@ -116,7 +116,7 @@ contract Blackjack is usingProvable {
         Player memory player;
         player.bet = msg.value;
 
-        Player memory splitPlayer; // placeholder
+        Player memory splitPlayer;
 
         games[msg.sender] = Game(id, _now, 0, Stage.Bet, dealer, player, splitPlayer);
 
@@ -144,7 +144,7 @@ contract Blackjack is usingProvable {
         require(cardValues[game.player.hand[0] % 13] == cardValues[game.player.hand[1] % 13], "First two cards must be same");
 
         game.splitPlayer.hand.push(game.player.hand[1]);
-        delete game.player.hand[1];
+        game.player.hand.pop();
 
         drawCard(game, game.player);
         drawCard(game, game.splitPlayer);
