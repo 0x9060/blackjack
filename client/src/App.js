@@ -10,8 +10,7 @@ class App extends Component {
 
     constructor(){
         super();
-        //this.state = {value: ''};
-        this.state = { betSize: '', web3: null, accounts: null, game: null , dealerHand: [], playerHand: [] };
+        this.state = { betSize: '', web3: null, playerAccount: null, game: null , dealerHand: [], playerHand: [], splitHand: []};
         this.onChange = this.onChange.bind(this)
     }
 
@@ -30,6 +29,8 @@ class App extends Component {
             // Use web3 to get the user's accounts.
             const accounts = await web3.eth.getAccounts();
 
+	    var playerAccount = web3.currentProvider.selectedAddress;
+
             // Get the contract instance.
             const networkId = await web3.eth.net.getId();
             const gameNetwork = BlackjackContract.networks[networkId];
@@ -39,7 +40,7 @@ class App extends Component {
             );
             // Set web3, accounts, and contract to the state, and then proceed with an
             // example of interacting with the contract's methods.
-            this.setState({ web3, accounts, game: gameInstance });
+            this.setState({ web3, playerAccount, game: gameInstance });
 
         } catch (error) {
             // Catch any errors for any of the above operations.
@@ -51,34 +52,55 @@ class App extends Component {
     };
 
     newRound = async () => {
-        const { accounts, game, betSize } = this.state;
+        const { playerAccount , game } = this.state;
 
-        await game.methods.initGame(0).send({ from: accounts[0] })
-        await game.methods.newRound(0).send({ from: accounts[0] });
-        await game.methods.addBet().send({ from: accounts[0], value: this.state.betSize });
+	console.log(playerAccount);
+	
+        await game.methods.newRound(0).send({ from: playerAccount, value: this.state.betSize });
 
         const responseDealer = await game.methods.getDealerHand().call();
         const responsePlayer = await game.methods.getPlayerHand().call();
 
-        //await game.methods.wolframDraw().call();
 
-        this.setState({ dealerHand: responseDealer, playerHand: responsePlayer });
+        this.setState({ dealerHand: responseDealer, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
+    };
+
+    split = async () => {
+        const { playerAccount , game } = this.state;
+
+        await game.methods.split().send({ from: playerAccount, value: this.state.betSize });
+
+        const responseDealer = await game.methods.getDealerHand().call();
+        const responsePlayer = await game.methods.getPlayerHand().call();
+
+        this.setState({ dealerHand: responseDealer, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
+    };
+
+    doubleDown = async () => {
+        const { playerAccount , game } = this.state;
+
+        await game.methods.doubleDown().send({ from: playerAccount, value: this.state.betSize });
+
+        const responseDealer = await game.methods.getDealerHand().call();
+        const responsePlayer = await game.methods.getPlayerHand().call();
+
+        this.setState({ dealerHand: responseDealer, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
     };
 
     hit = async () => {
-        const { accounts, game } = this.state;
+        const { playerAccount , game } = this.state;
 
-        await game.methods.hit(0).send({ from: accounts[0] });
+        await game.methods.hit(0).send({ from: playerAccount });
 
         const responsePlayer = await game.methods.getPlayerHand().call();
 
-        this.setState({ playerHand: responsePlayer });
+        this.setState({ playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
     };
 
     stand = async () => {
-        const { accounts, game } = this.state;
+        const { playerAccount , game } = this.state;
 
-        await game.methods.stand(0).send({ from: accounts[0] });
+        await game.methods.stand(0).send({ from: playerAccount });
 
         const responseDealer = await game.methods.getDealerHand().call();
 
@@ -90,26 +112,29 @@ class App extends Component {
         let splitButton;
 
         if (canSplit) {
-            splitButton = <button onClick={this.hit.bind(this)}>Split</button>;
+            splitButton = <button onClick={this.split.bind(this)}>Split</button>;
         }
 
         const canDoubleDown = this.state.playerHand.length === 2;
         let doubleDownButton;
 
         if (canDoubleDown) {
-            doubleDownButton = <button onClick={this.hit.bind(this)}>Double Down</button>;
+            doubleDownButton = <button onClick={this.doubleDown.bind(this)}>Double Down</button>;
         }
 
         if (!this.state.web3) {
             return <div>Loading Web3, accounts, and contract...</div>;
         }
 
+	const rankStrings = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
+	const suitStrings = [String.fromCharCode(9827), String.fromCharCode(9830), String.fromCharCode(9829), String.fromCharCode(9824)]
+
         const dealerCards = this.state.dealerHand.map(function(card,i){
-            return <td align="center" border="20px" key={i}> {card} </td>;
+            return <td align="center" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
         });
 
         const playerCards = this.state.playerHand.map(function(card,i){
-            return <td align="center" border="20px" key={i}> {card} </td>;
+            return <td align="center" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
         });
 
         return (
@@ -126,13 +151,18 @@ class App extends Component {
                 <button onClick={this.newRound.bind(this)}>Deal</button>
                 <br/>
                 <p/>
+		
                 <button onClick={this.stand.bind(this)}>Stand</button>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <button onClick={this.hit.bind(this)}>Hit</button>
+
+		<button onClick={this.hit.bind(this)}>Hit</button>
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                {doubleDownButton}
+
+	        {doubleDownButton}
 		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                {splitButton}
+
+	        {splitButton}
+
                 <br/>
                 <br/>
                 <br/>
