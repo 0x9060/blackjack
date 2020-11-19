@@ -92,7 +92,7 @@ class App extends Component {
     hit = async () => {
         const { playerAccount , game } = this.state;
 
-        await game.methods.hit(0).send({ from: playerAccount });
+        await game.methods.hit().send({ from: playerAccount });
 
         const responsePlayer = await game.methods.getPlayerHand().call();
 
@@ -102,11 +102,10 @@ class App extends Component {
     stand = async () => {
         const { playerAccount , game } = this.state;
 
-        await game.methods.stand(0).send({ from: playerAccount });
+        await game.methods.stand().send({ from: playerAccount });
 
-        const responseDealer = await game.methods.getDealerHand().call();
-
-        this.setState({ dealerHand: responseDealer });
+        //const responseDealer = await game.methods.getDealerHand().call();
+        //this.setState({ dealerHand: responseDealer });
     };
 
     render() {

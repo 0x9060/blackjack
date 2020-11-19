@@ -1,10 +1,13 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 pragma solidity 0.6.12;
 
-import "./provableAPI_0.6.sol";
+import "./provableAPI.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/math/SafeMath.sol";
 
-contract Blackjack is usingProvable {
-    //using SafeMath for uint256;
+contract Blackjack is Ownable, usingProvable {
+
+    using SafeMath for *;
 
     event StageChanged(uint256 gameId, uint64 round, Stage newStage);
     event NewRound(uint256 gameId, uint64 round, address player, uint256 bet);
@@ -63,6 +66,10 @@ contract Blackjack is usingProvable {
         emit Received(msg.sender, msg.value);
     }
 
+    function kill() public onlyOwner() {
+	selfdestruct(address(uint160(owner())));
+    }
+    
     modifier atStage(Stage _stage) {
         require(
                 games[msg.sender].stage == _stage,
@@ -109,8 +116,8 @@ contract Blackjack is usingProvable {
         uint64 _now = uint64(block.timestamp);
         uint256 id = uint256(keccak256(abi.encodePacked(block.number, _now, _seed)));
 
-        seed += _seed;
-
+	seed += seed;
+	
         Player memory dealer;
 
         Player memory player;
@@ -119,10 +126,10 @@ contract Blackjack is usingProvable {
         Player memory splitPlayer;
 
         games[msg.sender] = Game(id, _now, 0, Stage.Bet, dealer, player, splitPlayer);
-
         Game storage game = games[msg.sender];
+        reset(game);
 
-        game.dealer.seed = _seed;
+        game.dealer.seed = ~_seed;
         game.player.seed = _seed;
         game.splitPlayer.seed = _seed;
         game.round++;
@@ -166,12 +173,12 @@ contract Blackjack is usingProvable {
 
         if (game.stage == Stage.PlayHand) {
             drawCard(game, game.player);
-            game.player.bet += msg.value;
+            SafeMath.add(game.player.bet, msg.value);
             game.player.score = recalculate(game.player);
 
         } else if (game.stage == Stage.PlaySplitHand) {
             drawCard(game, game.splitPlayer);
-            game.splitPlayer.bet += msg.value;
+            SafeMath.add(game.splitPlayer.bet, msg.value);
             game.splitPlayer.score = recalculate(game.splitPlayer);
 
         }
@@ -180,12 +187,10 @@ contract Blackjack is usingProvable {
     }
 
 
-    function hit(uint256 _seed) public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
+    function hit() public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
         Game storage game = games[msg.sender];
 
         require(game.player.score < 21  && game.stage == Stage.PlayHand || (game.splitPlayer.score < 21 && game.stage == Stage.PlaySplitHand));
-
-        seed += _seed;
 
         if(game.stage == Stage.PlayHand) {
 
@@ -216,10 +221,8 @@ contract Blackjack is usingProvable {
 
     }
 
-    function stand(uint256 _seed) public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
+    function stand() public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
         Game storage game = games[msg.sender];
-        seed += _seed;
-
 
         if(game.stage == Stage.PlayHand && game.splitPlayer.hand.length == 0 || game.stage == Stage.PlaySplitHand) {
             nextStage(game);
@@ -240,7 +243,6 @@ contract Blackjack is usingProvable {
         // fix this, get off timestamp for seed
         uint64 _now = uint64(block.timestamp);
 
-        //uint256 card = ((player.seed * seed).add(_now)) % (NUMBER_OF_DECKS*52);
         uint256 card = ((player.seed * seed) + _now) % (NUMBER_OF_DECKS*52);
 
         // Modify seeds
@@ -267,13 +269,12 @@ contract Blackjack is usingProvable {
     }
 
     function concludeGame(Game storage game) private {
-        uint256 payout = calculatePayout(game, game.player) + calculatePayout(game, game.splitPlayer);
+        uint256 payout = SafeMath.add( calculatePayout(game, game.player) ,
+				       calculatePayout(game, game.splitPlayer) );
         if (payout != 0) {
             msg.sender.transfer(payout);
         }
         emit Result(game.id, game.round, payout, game.player.score, game.dealer.score);
-
-        reset(game);
     }
 
     function calculatePayout(Game storage game, Player storage player) private returns (uint256 payout) {
@@ -287,9 +288,9 @@ contract Blackjack is usingProvable {
             // Player has BlackJack but dealer does not.
             if (player.score == 21 && player.hand.length == 2 && !dealerHasBJ) {
                 // Pays 3 to 2
-                payout = player.bet * 5 / 2;
+                payout = SafeMath.div(SafeMath.mul(player.bet, 5), 2);
             } else if (player.score > dealer.score || dealer.score >= 21) {
-                payout = player.bet * 2;
+                payout = SafeMath.mul(player.bet, 2);
             } else if (player.score == dealer.score) {
                 payout = player.bet;
             } else {
