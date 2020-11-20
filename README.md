@@ -85,6 +85,9 @@ See [avoiding_common_attacks.md](avoiding_common_attacks.md "Avoiding common att
 - Card reveal scheme
 - Payment strategy
 
+??????? GAS EXPLOIT ??????
+IS IT POSSIBLE TO PREVENT BUSTING BY CAREFULLY SELECTING THE GAS LIMIT (busting costs more gas b/c of more operations)
+
 ### Project structure
 
 This is a `truffle` project using a `React` front-end, built from the truffle react box. The project directory is constructed as follows:
