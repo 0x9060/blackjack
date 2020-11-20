@@ -3,7 +3,9 @@ pragma solidity 0.6.12;
 
 import "./provableAPI.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+//import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.2.0/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/math/SafeMath.sol";
+//import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/v3.2.0/contracts/math/SafeMath.sol";
 
 contract Blackjack is Ownable, usingProvable {
 
@@ -201,7 +203,6 @@ contract Blackjack is Ownable, usingProvable {
                 nextStage(game);
 
                 if (game.splitPlayer.hand.length == 0){
-                    nextStage(game);
                     concludeGame(game);
                 }
 
@@ -213,7 +214,6 @@ contract Blackjack is Ownable, usingProvable {
             game.splitPlayer.score = recalculate(game.splitPlayer);
 
             if (game.splitPlayer.score >= 21) {
-                nextStage(game);
                 concludeGame(game);
             }
 
@@ -224,12 +224,12 @@ contract Blackjack is Ownable, usingProvable {
     function stand() public eitherStage(Stage.PlayHand, Stage.PlaySplitHand) {
         Game storage game = games[msg.sender];
 
-        if(game.stage == Stage.PlayHand && game.splitPlayer.hand.length == 0 || game.stage == Stage.PlaySplitHand) {
+        if((game.stage == Stage.PlayHand && game.splitPlayer.hand.length == 0) || game.stage == Stage.PlaySplitHand) {
             nextStage(game);
             concludeGame(game);
-        }
-
+        } else {
         nextStage(game);
+	}
     }
 
     function dealCards(Game storage game) private { // better called startGame?
