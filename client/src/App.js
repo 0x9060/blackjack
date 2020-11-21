@@ -54,8 +54,6 @@ class App extends Component {
     newRound = async () => {
         const { playerAccount , game } = this.state;
 
-	console.log(playerAccount);
-	
         await game.methods.newRound(0).send({ from: playerAccount, value: this.state.betSize });
 
         const responseDealer = await game.methods.getDealerHand().call();
@@ -161,14 +159,8 @@ class App extends Component {
 	    
 	        {splitHand}
 	        </div>
-                <br/><br/><br/>
-
-                Place your bet: <input value={this.state.betSize} onChange={this.onChange}/> wei
-                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
-                <button onClick={this.newRound.bind(this)}>Deal</button>
                 <br/>
-                <p/>
-		
+
                 <button onClick={this.stand.bind(this)}>Stand</button>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
@@ -180,8 +172,16 @@ class App extends Component {
 
 	        {splitButton}
 
+                <br/><br/><br/><br/>
+
+	        Place your bet: <input value={this.state.betSize} onChange={this.onChange}/> wei
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button onClick={this.newRound.bind(this)}>Deal</button>
                 <br/>
                 <br/>
+		<i>(connected account: {this.state.playerAccount})</i>
+                <p/>
+		
                 <br/>
                 <hr style={{height: 2}}/>
                 <br/>
