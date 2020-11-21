@@ -36,6 +36,7 @@ git clone ...
 ...
 
 cd ~/blackjack
+npm install
 ```
 
 
@@ -44,7 +45,8 @@ cd ~/blackjack
 First run a local test Ethereum blockchain with `ganache-cli`. Then connect `Metamask` to the local blockchain using the provided **mnemonic**. Then run the following.
 
 ```
-truffle migrate
+truffle compile --all
+truffle migrate --reset
 cd client
 npm run start
 ```

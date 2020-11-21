@@ -54,7 +54,7 @@ class App extends Component {
     newRound = async () => {
         const { playerAccount , game } = this.state;
 
-        await game.methods.newRound(0).send({ from: playerAccount, value: this.state.betSize });
+        await game.methods.newRound().send({ from: playerAccount, value: this.state.betSize });
 
         const responseDealer = await game.methods.getDealerHand().call();
         const responsePlayer = await game.methods.getPlayerHand().call();
