@@ -1,0 +1,25 @@
+{
+  "name": "blackjack",
+  "version": "1.0.0",
+  "description": "Blackjack game run on the Ethereum blockchain using `web3.js` and React web framework.",
+  "main": "truffle-config.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0x9060/blackjack.git"
+  },
+  "author": "",
+  "license": "GPL-3.0-or-later",
+  "bugs": {
+    "url": "https://github.com/0x9060/blackjack/issues"
+  },
+  "homepage": "https://github.com/0x9060/blackjack#readme",
+  "dependencies": {
+    "@openzeppelin/contracts": "^3.2.0"
+  }
+}

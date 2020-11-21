@@ -1,4 +1,5 @@
 # Packages
+node_modules/*
 client/node_modules/*
 
 # Build files
