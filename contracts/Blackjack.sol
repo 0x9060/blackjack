@@ -212,11 +212,13 @@ contract Blackjack is Ownable, usingProvable {
             drawCard(game, game.player);
             SafeMath.add(game.player.bet, msg.value);
             game.player.score = recalculate(game.player);
+	    game.player.doubleDown = true;
 
         } else if (game.stage == Stage.PlaySplitHand) {
             drawCard(game, game.splitPlayer);
             SafeMath.add(game.splitPlayer.bet, msg.value);
             game.splitPlayer.score = recalculate(game.splitPlayer);
+	    game.splitPlayer.doubleDown = true;
 
         }
 
