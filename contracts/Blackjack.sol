@@ -73,6 +73,9 @@ contract Blackjack is Ownable, usingProvable {
         emit Received(msg.sender, msg.value);
     }
 
+    /// @dev [Module 10, Lesson 1] Action restriction on critical function
+    /// @dev [Module 10, Lesson 1] Mortality
+    /// @dev [Library used] Ownable library from OpenZeppelin is imported and used here.
     function kill() public onlyOwner()
     {
 	selfdestruct(address(uint160(owner())));
