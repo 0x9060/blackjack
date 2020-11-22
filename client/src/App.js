@@ -56,10 +56,11 @@ class App extends Component {
 
         await game.methods.newRound().send({ from: playerAccount, value: this.state.betSize });
 
-        const responseDealer = await game.methods.getDealerHand().call();
+        const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
 
-        this.setState({ dealerHand: responseDealer, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
+	console.log(responseDealer.score, responsePlayer.handScore);
+        this.setState({ dealerHand: responseDealer.hand, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
     };
 
     split = async () => {
@@ -80,10 +81,10 @@ class App extends Component {
 
         await game.methods.doubleDown().send({ from: playerAccount, value: this.state.betSize });
 
-        const responseDealer = await game.methods.getDealerHand().call();
+        const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
 
-        this.setState({ dealerHand: responseDealer, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
+        this.setState({ dealerHand: responseDealer.hand, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
     };
 
     hit = async () => {
@@ -101,13 +102,13 @@ class App extends Component {
 
         await game.methods.stand().send({ from: playerAccount });
 
-        const responseDealer = await game.methods.getDealerHand().call();
+        const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
 
 	console.log(responseDealer);
 	console.log(responsePlayer);
 
-        this.setState({ dealerHand: responseDealer });
+        this.setState({ dealerHand: responseDealer.hand });
     };
 
     render() {
@@ -153,7 +154,7 @@ class App extends Component {
 
         return (
                 <div className="App">
-                <h1>Blackjack Smart Contract dApp</h1>
+                <h1>Blackjack dApp</h1>
                 <br/><br/>
                 <div>Dealer Cards: <table align="center"><tbody><tr>{dealerCards}</tr></tbody></table></div>
                 <br/><br/>
