@@ -57,8 +57,7 @@ class App extends Component {
         await game.methods.newRound().send({ from: playerAccount, value: this.state.betSize });
 
         const responseDealer = await game.methods.getDealerHand().call();
-        const responsePlayer = await game.methods.getPlayerHand().call();
-
+        const responsePlayer = await game.methods.getPlayerState().call();
 
         this.setState({ dealerHand: responseDealer, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
     };
@@ -68,7 +67,7 @@ class App extends Component {
 
         await game.methods.split().send({ from: playerAccount, value: this.state.betSize });
 
-        const responsePlayer = await game.methods.getPlayerHand().call();
+        const responsePlayer = await game.methods.getPlayerState().call();
 
 	console.log(responsePlayer.hand);
 	console.log(responsePlayer.splitHand);
@@ -82,7 +81,7 @@ class App extends Component {
         await game.methods.doubleDown().send({ from: playerAccount, value: this.state.betSize });
 
         const responseDealer = await game.methods.getDealerHand().call();
-        const responsePlayer = await game.methods.getPlayerHand().call();
+        const responsePlayer = await game.methods.getPlayerState().call();
 
         this.setState({ dealerHand: responseDealer, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
     };
@@ -92,7 +91,7 @@ class App extends Component {
 
         await game.methods.hit().send({ from: playerAccount });
 
-        const responsePlayer = await game.methods.getPlayerHand().call();
+        const responsePlayer = await game.methods.getPlayerState().call();
 
         this.setState({ playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
     };
@@ -102,8 +101,13 @@ class App extends Component {
 
         await game.methods.stand().send({ from: playerAccount });
 
-        //const responseDealer = await game.methods.getDealerHand().call();
-        //this.setState({ dealerHand: responseDealer });
+        const responseDealer = await game.methods.getDealerHand().call();
+        const responsePlayer = await game.methods.getPlayerState().call();
+
+	console.log(responseDealer);
+	console.log(responsePlayer);
+
+        this.setState({ dealerHand: responseDealer });
     };
 
     render() {

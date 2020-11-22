@@ -88,6 +88,22 @@ contract Blackjack is Ownable, usingProvable {
         _;
     }
 
+    /// @dev Need to implement card removal
+    /// @dev seed should not be based on timestamp. This is a security risk and placeholder for now
+    /// @param game The current game containing the player drawing a card
+    /// @param player A player from a Blackjack game, holding a hand to draw card to
+    function drawCard(Game storage game, Player storage player)	private {
+        uint64 _now = uint64(block.timestamp);
+        uint256 card = ((player.seed * seed) + _now) % (NUMBER_OF_DECKS*52);
+        player.seed = uint256(keccak256(abi.encodePacked(player.seed, card, _now)));
+        seed = uint256(keccak256(abi.encodePacked(seed, card, _now)));
+
+        player.hand.push(card);
+        player.score = recalculate(player);
+
+        emit CardDrawn(game.id, game.round, cardValues[uint8(card % 52 % 13)], player.score);
+    }
+
     /// @dev Could be used for more complex check-reveal scheme for payable functions?
     /// @param game The current game which requires stage update
     function nextStage(Game storage game) internal {
@@ -137,7 +153,7 @@ contract Blackjack is Ownable, usingProvable {
 
         reset(game);
 
-        player.bet = msg.value;
+        game.player.bet = msg.value;
         game.dealer.seed = ~_seed;
         game.player.seed = _seed;
         game.splitPlayer.seed = _seed;
@@ -145,11 +161,35 @@ contract Blackjack is Ownable, usingProvable {
 
         emit NewRound(game.id, game.round, msg.sender, msg.value);
 
-        nextStage(game);
         dealCards(game);
         emit PlayerHand(game.id, game.player.hand, game.splitPlayer.hand);
+
+        nextStage(game);
     }
 
+
+    /// @param player A player from a Blackjack game, holding a hand to calculate the score on
+    /// @return score The Blackjack score for the player.
+    function recalculate(Player storage player)	private	view returns (uint8 score) {
+        uint8 numberOfAces = 0;
+        for (uint8 i = 0; i < player.hand.length; i++) {
+            uint8 card = (uint8) (player.hand[i] % 52 % 13);
+            score += cardValues[card];
+            if (card == 0) numberOfAces++;
+        }
+        while (numberOfAces > 0 && score > 21) {
+            score -= 10;
+            numberOfAces--;
+        }
+    }
+
+    /// @dev done only at start of hand
+    /// @param game The current game which is starting
+    function dealCards(Game storage game) private atStage(Stage.Bet) {
+        drawCard(game, game.player);
+        drawCard(game, game.dealer);
+        drawCard(game, game.player);
+    }
 
     /// @notice Split first two cards into two hands, drawing one additional card for each. An equivalent bet value is required.
     /// @dev not working correctly on last check - the require for bet size was reverting
@@ -217,7 +257,7 @@ contract Blackjack is Ownable, usingProvable {
             if (game.player.score >= 21) {
                 nextStage(game);
 
-                if (game.splitPlayer.hand.length == 0){
+                if (game.splitPlayer.hand.length == 0) {
                     concludeGame(game);
                 }
             }
@@ -241,50 +281,28 @@ contract Blackjack is Ownable, usingProvable {
         if((game.stage == Stage.PlayHand && game.splitPlayer.hand.length == 0)
 	   || game.stage == Stage.PlaySplitHand
 	   ) {
-            nextStage(game);
             concludeGame(game);
         } else {
         nextStage(game);
 	}
     }
 
-    /// @dev done only at start of hand
-    /// @param game The current game which is starting
-    function dealCards(Game storage game) private atStage(Stage.Bet) {
-        drawCard(game, game.player);
+    /// @dev TODO: Change dealer rules from S17 to H17
+    /// @dev TODO: Properly handle when dealer has Blackjack (i.e., refund doubles and splits?)
+    /// @param game The concluded Blackjack game
+    /// @return bool Whether the dealer has Blackjack
+    function drawDealerCards(Game storage game)	private	returns (bool) {
         drawCard(game, game.dealer);
-        drawCard(game, game.player);
-    }
-
-    /// @dev Need to implement card removal
-    /// @dev seed should not be based on timestamp. This is a security risk and placeholder for now
-    /// @param game The current game containing the player drawing a card
-    /// @param player A player from a Blackjack game, holding a hand to draw card to
-    function drawCard(Game storage game, Player storage player)	private {
-        uint64 _now = uint64(block.timestamp);
-        uint256 card = ((player.seed * seed) + _now) % (NUMBER_OF_DECKS*52);
-        player.seed = uint256(keccak256(abi.encodePacked(player.seed, card, _now)));
-        seed = uint256(keccak256(abi.encodePacked(seed, card, _now)));
-
-        player.hand.push(card);
-        player.score = recalculate(player);
-
-        emit CardDrawn(game.id, game.round, cardValues[uint8(card % 52 % 13)], player.score);
-    }
-
-    /// @param player A player from a Blackjack game, holding a hand to calculate the score on
-    /// @return score The Blackjack score for the player.
-    function recalculate(Player storage player)	private	view returns (uint8 score) {
-        uint8 numberOfAces = 0;
-        for (uint8 i = 0; i < player.hand.length; i++) {
-            uint8 card = (uint8) (player.hand[i] % 52 % 13);
-            score += cardValues[card];
-            if (card == 0) numberOfAces++;
+        if (game.dealer.score == 21) {
+            return true;
         }
-        while (numberOfAces > 0 && score > 21) {
-            score -= 10;
-            numberOfAces--;
+
+        // Dealer must draw to 16 and stand on all 17's
+        while (game.dealer.score < 17) {
+            drawCard(game, game.dealer);
         }
+
+        return false;
     }
 
     /// @dev [Module 9, Lesson 3] Preventing integer overflow with SafeMath
@@ -325,25 +343,6 @@ contract Blackjack is Ownable, usingProvable {
         }
     }
 
-    /// @dev TODO: Change dealer rules from S17 to H17
-    /// @dev TODO: Properly handle when dealer has Blackjack (i.e., refund doubles and splits?)
-    /// @param game The concluded Blackjack game
-    /// @return bool Whether the dealer has Blackjack
-    function drawDealerCards(Game storage game)	private	returns (bool) {
-        drawCard(game, game.dealer);
-        if (game.dealer.score == 21) {
-            return true;
-        }
-
-        // Dealer must draw to 16 and stand on all 17's
-        while (game.dealer.score < 17) {
-            drawCard(game, game.dealer);
-        }
-
-        return false;
-    }
-
-
     /// Getters
     /// @notice Returns the dealer's opened hand
     /// @return hand The dealer's hand
@@ -355,15 +354,27 @@ contract Blackjack is Ownable, usingProvable {
     /// @notice Returns all player's hands
     /// @return hand The player's primary hand
     /// @return splitHand The player's split hand, if any
-    function getPlayerHand() public view
+    /// @return bet Original bet at start of hand
+    /// @return doubleDownBet Amount of wager placed on double down
+    /// @return splitBet Bet (matching original) staking split hand
+    /// @return splitDoubleDownBet Amount of wager placed on double down of split hand
+    function getPlayerState() public view
 	returns (
 		 uint256[] memory hand,
-		 uint256[] memory splitHand
+		 uint256[] memory splitHand,
+		 uint256 bet,
+		 uint256 doubleDownBet,
+		 uint256 splitBet,
+		 uint256 splitDoubleDownBet
 		 )
     {
         Game storage game = games[msg.sender];
         hand = game.player.hand;
         splitHand = game.splitPlayer.hand;
+	bet = game.player.bet;
+	splitBet = game.splitPlayer.bet;
+	doubleDownBet = game.player.doubleDownBet;
+	splitDoubleDownBet = game.splitPlayer.doubleDownBet;
     }
 
     /// @notice Returns selected elements from a game
