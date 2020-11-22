@@ -10,7 +10,7 @@ import "../contracts/Blackjack.sol";
 /// @notice This Blackjack contract has known security risks. Some tests in here are known to be failing to successfully isolate such security risks.
 contract TestBlackjack {
 
-    uint public initialBalance = 1 ether;
+    uint public initialBalance = 10 ether;
     Blackjack casino;
     UserAgent ploppy;
     UserAgent squatter;
@@ -23,14 +23,14 @@ contract TestBlackjack {
         ploppy = new UserAgent(casino);
         squatter = new UserAgent(casino);
 
-        address(ploppy).transfer(1 ether);
+        address(ploppy).transfer(5 ether);
     }
 
     /// newRound Tests
     
     // test for hand length
     function testNewRoundDealerHasOneCard() public {
-	bool r = ploppy.newRound(0 wei);
+	bool r = ploppy.newRound(100 wei);
         Assert.equal(uint(1), uint(0), "Dealer must be showing only one card");
     }
 
@@ -39,11 +39,13 @@ contract TestBlackjack {
 
     /// doubleDown Tests
 
-    // test for required value
+    // test for required bet
     function testCannotDoubleForMoreThanTwiceBet() public {}
     /// @dev this is a known bug
     function testCanDoubleForExactlyTwiceBet() public {}
-    
+    // test for double after hit
+    function testCannotDoubleAfterHit() public {}
+
 
     /// hit Tests
 
@@ -109,22 +111,12 @@ contract UserAgent {
     }
 
     /// @dev need to fix this return
-    function getDealerHand() public returns(bool) {
-        (bool success, ) = address(thisCasino).call(abi.encodeWithSignature("kill()"));
-        return success;
-    }
+    //function getDealerHand() public returns(bool) {}
 
     /// @dev need to fix this return
-    function getPlayerHand() public returns(bool) {
-        (bool success, ) = address(thisCasino).call(abi.encodeWithSignature("kill()"));
-        return success;
-    }
+    //function getPlayerHand() public returns(bool) {}
 
     /// @dev need to fix this return
-    function getGameState() public returns(bool) {
-        (bool success, ) = address(thisCasino).call(abi.encodeWithSignature("kill()"));
-        return success;
-    }
-
+    //function getGameState() public returns(bool) {}
 
 }
