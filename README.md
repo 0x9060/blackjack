@@ -132,3 +132,13 @@ This is a `truffle` project using a `React` front-end, built from the truffle re
 └── truffle-config.js
 
 ```
+
+### TO-DO
+
+High level plans for major changes to project, most not yet started.
+
+- Use oracle for RNG on the fly (e.g., from Wolfram Alfa using `provableAPI`).
+- Separate betting and action functions.
+- Fix Blackjack refunds, other payout quirks - write a lot more payment tests.
+- Gas optimization
+- General refactoring
