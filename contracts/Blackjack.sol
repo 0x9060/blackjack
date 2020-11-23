@@ -157,6 +157,8 @@ contract Blackjack is Ownable, usingProvable {
 
         game.player.bet = 0;
         game.player.doubleDownBet = 0;
+        game.splitPlayer.bet = 0;
+        game.splitPlayer.doubleDownBet = 0;
 
         game.player.score = 0;
         delete game.player.hand;
@@ -304,45 +306,49 @@ contract Blackjack is Ownable, usingProvable {
                 return true;
             }
         }
-
-        return false;
     }
 
     /// @dev [Module 9, Lesson 3] Preventing integer overflow with SafeMath
     /// @param game The game to conclude, paying out players if necessary
     function concludeGame(Game storage game) private {
-        uint256 payout = SafeMath.add( calculatePayout(game, game.player) ,
-                                       calculatePayout(game, game.splitPlayer) );
+        uint payout = 0;
+
+        bool dealerHasBJ = drawDealerCards(game);
+
+        if (game.player.score <= 21) {
+            payout = SafeMath.add(payout, calculatePayout(game, game.player, dealerHasBJ) );
+        }
+
+        if (game.splitPlayer.score <= 21) {
+            payout = SafeMath.add(payout, calculatePayout(game, game.splitPlayer, dealerHasBJ) );
+        }
+
         if (payout != 0) {
             msg.sender.transfer(payout);
         }
         emit Result(game.id, game.round, payout, game.player.score, game.dealer.score);
     }
 
+    event LogDebugPayout(uint playerScore, uint dealerScore);
     /// @dev [Module 9, Lesson 3] Preventing integer overflow with SafeMath
     /// @dev TODO: Properly handle when dealer has Blackjack (i.e., refund doubles and splits?)
     /// @param game The concluded Blackjack game
     /// @param player A player from the game to calculate the payout for
     /// @return payout Amount of ether to transfer to player for winnings
-    function calculatePayout(Game storage game, Player storage player) private returns (uint256 payout) {
+    function calculatePayout(Game storage game, Player storage player, bool dealerHasBJ) private returns (uint256 payout) {
         Player memory dealer = game.dealer;
         // Player busted
-        if (player.score > 21) {
-            payout = 0;
+        emit LogDebugPayout(player.score, dealer.score);
+        // Player has BlackJack but dealer does not.
+        if (player.score == 21 && player.hand.length == 2 && !dealerHasBJ) {
+            // Pays 3 to 2
+            payout = SafeMath.div(SafeMath.mul(player.bet, 5), 2);
+        } else if (player.score > dealer.score || dealer.score >= 21) {
+            payout = SafeMath.mul(SafeMath.add(player.bet, player.doubleDownBet), 2);
+        } else if (player.score == dealer.score) {
+            payout = SafeMath.add(player.bet, player.doubleDownBet);
         } else {
-            bool dealerHasBJ = drawDealerCards(game);
-
-            // Player has BlackJack but dealer does not.
-            if (player.score == 21 && player.hand.length == 2 && !dealerHasBJ) {
-                // Pays 3 to 2
-                payout = SafeMath.div(SafeMath.mul(player.bet, 5), 2);
-            } else if (player.score > dealer.score || dealer.score >= 21) {
-                payout = SafeMath.mul(SafeMath.add(player.bet, player.doubleDownBet), 2);
-            } else if (player.score == dealer.score) {
-                payout = SafeMath.add(player.bet, player.doubleDownBet);
-            } else {
-                payout = 0;
-            }
+            payout = 0;
         }
     }
 
