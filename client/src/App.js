@@ -6,8 +6,6 @@ import "./App.css";
 
 class App extends Component {
 
-    //state = { web3: null, accounts: null, game: null , dealerHand: [], playerHand: [] };
-
     constructor(){
         super();
         this.state = { betSize: '', web3: null, playerAccount: null, game: null , dealerHand: [], playerHand: [], splitHand: []};
@@ -26,10 +24,7 @@ class App extends Component {
             // Get network provider and web3 instance.
             const web3 = await getWeb3();
 
-            // Use web3 to get the user's accounts.
-            const accounts = await web3.eth.getAccounts();
-
-	    var playerAccount = web3.currentProvider.selectedAddress;
+            var playerAccount = web3.currentProvider.selectedAddress;
 
             // Get the contract instance.
             const networkId = await web3.eth.net.getId();
@@ -58,9 +53,21 @@ class App extends Component {
 
         const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
+	const responseGame = await game.methods.getGameState().call();
 
-	console.log(responseDealer.score, responsePlayer.handScore);
-        this.setState({ dealerHand: responseDealer.hand, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
+        this.setState({
+	    stage: responseGame.stage,
+            dealerHand: responseDealer.hand,
+            playerHand: responsePlayer.hand,
+            splitHand: responsePlayer.splitHand,
+            dealerScore: responseDealer.score,
+            handScore: responsePlayer.handScore,
+            splitHandScore: responsePlayer.splitHandScore,
+            bet: responsePlayer.bet,
+            splitBet: responsePlayer.splitBet,
+            doubleDownBet: responsePlayer.doubleDownBet,
+            splitDoubleDownBet: responsePlayer.splitDoubleDownBet
+        });
     };
 
     split = async () => {
@@ -68,12 +75,23 @@ class App extends Component {
 
         await game.methods.split().send({ from: playerAccount, value: this.state.betSize });
 
+        const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
+	const responseGame = await game.methods.getGameState().call();
 
-	console.log(responsePlayer.hand);
-	console.log(responsePlayer.splitHand);
-	
-        this.setState({ playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
+        this.setState({
+	    stage: responseGame.stage,
+            dealerHand: responseDealer.hand,
+            playerHand: responsePlayer.hand,
+            splitHand: responsePlayer.splitHand,
+            dealerScore: responseDealer.score,
+            handScore: responsePlayer.handScore,
+            splitHandScore: responsePlayer.splitHandScore,
+            bet: responsePlayer.bet,
+            splitBet: responsePlayer.splitBet,
+            doubleDownBet: responsePlayer.doubleDownBet,
+            splitDoubleDownBet: responsePlayer.splitDoubleDownBet
+        });
     };
 
     doubleDown = async () => {
@@ -83,8 +101,21 @@ class App extends Component {
 
         const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
+	const responseGame = await game.methods.getGameState().call();
 
-        this.setState({ dealerHand: responseDealer.hand, playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
+        this.setState({
+	    stage: responseGame.stage,
+            dealerHand: responseDealer.hand,
+            playerHand: responsePlayer.hand,
+            splitHand: responsePlayer.splitHand,
+            dealerScore: responseDealer.score,
+            handScore: responsePlayer.handScore,
+            splitHandScore: responsePlayer.splitHandScore,
+            bet: responsePlayer.bet,
+            splitBet: responsePlayer.splitBet,
+            doubleDownBet: responsePlayer.doubleDownBet,
+            splitDoubleDownBet: responsePlayer.splitDoubleDownBet
+        });
     };
 
     hit = async () => {
@@ -92,9 +123,24 @@ class App extends Component {
 
         await game.methods.hit().send({ from: playerAccount });
 
+        const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
+	const responseGame = await game.methods.getGameState().call();
 
-        this.setState({ playerHand: responsePlayer.hand, splitHand: responsePlayer.splitHand });
+        this.setState({
+	    stage: responseGame.stage,
+            dealerHand: responseDealer.hand,
+            playerHand: responsePlayer.hand,
+            splitHand: responsePlayer.splitHand,
+            dealerScore: responseDealer.score,
+            handScore: responsePlayer.handScore,
+            splitHandScore: responsePlayer.splitHandScore,
+            bet: responsePlayer.bet,
+            splitBet: responsePlayer.splitBet,
+            doubleDownBet: responsePlayer.doubleDownBet,
+            splitDoubleDownBet: responsePlayer.splitDoubleDownBet
+        });
+
     };
 
     stand = async () => {
@@ -104,36 +150,49 @@ class App extends Component {
 
         const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
+	const responseGame = await game.methods.getGameState().call();
 
-	console.log(responseDealer);
-	console.log(responsePlayer);
+        this.setState({
+	    stage: responseGame.stage,
+            dealerHand: responseDealer.hand,
+            playerHand: responsePlayer.hand,
+            splitHand: responsePlayer.splitHand,
+            dealerScore: responseDealer.score,
+            handScore: responsePlayer.handScore,
+            splitHandScore: responsePlayer.splitHandScore,
+            bet: responsePlayer.bet,
+            splitBet: responsePlayer.splitBet,
+            doubleDownBet: responsePlayer.doubleDownBet,
+            splitDoubleDownBet: responsePlayer.splitDoubleDownBet
+        });
 
-        this.setState({ dealerHand: responseDealer.hand });
     };
 
     render() {
-	const rankStrings = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
-	const rankValues = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
-	const suitStrings = [String.fromCharCode(9827), String.fromCharCode(9830), String.fromCharCode(9829), String.fromCharCode(9824)]
+        const rankStrings = ["A", "2", "3", "4", "5", "6", "7", "8", "9", "T", "J", "Q", "K"]
+        const rankValues = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10]
+        const suitStrings = [String.fromCharCode(9827), String.fromCharCode(9830), String.fromCharCode(9829), String.fromCharCode(9824)]
 
-        const canSplit = this.state.playerHand.length === 2 && (rankValues[this.state.playerHand[0] % 13]) === (rankValues[this.state.playerHand[1] % 13]);
-	const hasSplit = this.state.splitHand.length > 0;
+        const canSplit = this.state.playerHand.length === 2 &&
+              this.state.splitHand.length === 0 &&
+              (rankValues[this.state.playerHand[0] % 13]) === (rankValues[this.state.playerHand[1] % 13]);
+        const hasSplit = this.state.splitHand.length > 0;
 
         let splitButton;
         if (canSplit) {
             splitButton = <button onClick={this.split.bind(this)}>Split</button>;
         }
-	
+
         const playerSplitCards = this.state.splitHand.map(function(card,i){
             return <td align="center" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
         });
 
-	let splitHand;
-	if (hasSplit) {
-	    splitHand = <div><table align="center"><tbody><tr>{playerSplitCards}</tr></tbody></table></div>;
-	}
-	
-        const canDoubleDown = this.state.playerHand.length === 2;
+        let splitHand;
+        if (hasSplit) {
+            splitHand = <div><table align="center"><tbody><tr>{playerSplitCards}</tr></tbody></table></div>;
+        }
+
+        const canDoubleDown = ((this.state.playerHand.length === 2) || (this.state.splitHand.length === 2));
         let doubleDownButton;
 
         if (canDoubleDown) {
@@ -149,49 +208,63 @@ class App extends Component {
         });
 
         const playerCards = this.state.playerHand.map(function(card,i){
-            return <td align="center" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
+            return <td align="center" fontSize="40px" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
         });
+
+        let playerScore;
+        const playHand = this.state.playerHand.length > 0;
+        if (playHand) {
+            playerScore = <td><i>Hand Score: {this.state.handScore}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
+        }
+
+        let playerBet;
+        if (playHand) {
+            playerBet = <td><i>Bet: {parseInt(this.state.bet) + parseInt(this.state.doubleDownBet)}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
+        }
 
         return (
                 <div className="App">
                 <h1>Blackjack dApp</h1>
                 <br/><br/>
-                <div>Dealer Cards: <table align="center"><tbody><tr>{dealerCards}</tr></tbody></table></div>
+                <div><h3>Dealer:</h3>
+                <table align="center"><tbody><tr>{dealerCards}</tr></tbody></table></div>
                 <br/><br/>
-                <div>Your Cards:
-		<table align="center"><tbody><tr>{playerCards}</tr></tbody></table>
-		<br/><br/>
-	    
-	        {splitHand}
-	        </div>
+                <div><h3>Your Cards:</h3>
+                <table align="center"><tbody><tr>{playerScore}{playerBet}{playerCards}</tr>
+                </tbody></table>
+                <br/><br/>
+
+            {splitHand}
+            </div>
                 <br/>
 
                 <button onClick={this.stand.bind(this)}>Stand</button>
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
-		<button onClick={this.hit.bind(this)}>Hit</button>
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                <button onClick={this.hit.bind(this)}>Hit</button>
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
-	        {doubleDownButton}
-		&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+            {doubleDownButton}
+                &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 
-	        {splitButton}
+            {splitButton}
 
                 <br/><br/><br/><br/>
 
-	        Place your bet: <input value={this.state.betSize} onChange={this.onChange}/> wei
+            Place your bet: <input value={this.state.betSize} onChange={this.onChange}/> wei
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <button onClick={this.newRound.bind(this)}>Deal</button>
                 <br/>
                 <br/>
-		<i>(connected account: {this.state.playerAccount})</i>
+                <i>(connected account: {this.state.playerAccount})</i>
                 <p/>
-		
+
                 <br/>
                 <hr style={{height: 2}}/>
                 <br/>
 
-                <p>No Insurance - Blackjack Pays 3:2 - Double After Split - No Resplit</p>
+                <p>Blackjack Pays 3:2 {String.fromCharCode(9827)} Dealer Stands on Soft 17 {String.fromCharCode(9830)} No Insurance {String.fromCharCode(9829)} Double After Split {String.fromCharCode(9824)} No Resplit</p>
+
 
             </div>
         );
