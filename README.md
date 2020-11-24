@@ -139,6 +139,6 @@ High level plans for major changes to project, most not yet started.
 
 - Use oracle for RNG on the fly (e.g., from Wolfram Alfa using `provableAPI`).
 - Separate betting and action functions.
-- Fix Blackjack refunds, other payout quirks - write a lot more payment tests.
+- Fix refunds for dealer Blackjack, other payout quirks - write a lot more payment tests.
 - Gas optimization
 - General refactoring

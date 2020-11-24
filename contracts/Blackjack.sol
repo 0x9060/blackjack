@@ -42,11 +42,17 @@ contract Blackjack is Ownable, usingProvable {
     }
 
     /// @dev State variables
+    /// @dev Includes some circuit breakers
+    /// @dev Update maxBet to be Kelly optimal
     uint256 constant NUMBER_OF_DECKS = 1;
     uint8[13] cardValues = [11, 2, 3, 4, 5, 6, 7, 8, 9, 10, 10, 10, 10];
     mapping(address => Game) games;
     string private randomCards;
     uint256 seed;
+    uint256 maxBet; // used for bet (risk) optimization
+    bool stopLoss; // used for circuit breaker
+    uint8 lossCounter;
+    uint8 lossLimit = 20; // consecutive losses
 
     /// @dev Events
     event StageChanged(uint256 gameId, uint64 round, Stage newStage);
@@ -68,6 +74,8 @@ contract Blackjack is Ownable, usingProvable {
 
     receive() external payable {
         emit Received(msg.sender, msg.value);
+
+        maxBet = SafeMath.div(address(this).balance, 200);
     }
 
     /// @dev [Module 10, Lesson 1] Action restriction on critical function
@@ -76,6 +84,9 @@ contract Blackjack is Ownable, usingProvable {
     function kill() public onlyOwner() {
         selfdestruct(address(uint160(owner())));
     }
+
+    /// @dev [Module 10, Lesson 1] Circuit breakers implemented here
+    modifier stopInEmergency() { require(!stopLoss, "Circuit breaker triggered"); _; }
 
     modifier atStage(Stage _stage) {
         require(games[msg.sender].stage == _stage, "Function cannot be called at this time.");
@@ -117,9 +128,12 @@ contract Blackjack is Ownable, usingProvable {
     }
 
     /// @notice Start a new round of Blackjack with the transferred value as the original bet.
+    /// @dev [Module 10, Lesson 1] Circuit breakers implemented here
     /// @dev seed should not be based on timestamp. This is a security risk and placeholder for now
     /// @dev Plan to split this into multiple functions such that placing bet is atomic before proceeding
-    function newRound() public payable {
+    function newRound() public payable stopInEmergency {
+	require(msg.value <= maxBet, "Bet must be less than the max bet.");
+
         uint256 _seed;
         uint64 _now = uint64(block.timestamp);
         uint256 id = uint256(keccak256(abi.encodePacked(block.number, _now, _seed)));
@@ -309,8 +323,9 @@ contract Blackjack is Ownable, usingProvable {
     }
 
     /// @dev [Module 9, Lesson 3] Preventing integer overflow with SafeMath
+    /// @dev [Module 10, Lesson 1] Circuit breakers implemented here
     /// @param game The game to conclude, paying out players if necessary
-    function concludeGame(Game storage game) private {
+    function concludeGame(Game storage game) private stopInEmergency {
         uint payout = 0;
 
         bool dealerHasBJ = drawDealerCards(game);
@@ -323,13 +338,24 @@ contract Blackjack is Ownable, usingProvable {
             payout = SafeMath.add(payout, calculatePayout(game, game.splitPlayer, dealerHasBJ) );
         }
 
+	require(payout <= SafeMath.mul(game.player.bet, 8), "Dealer error - payout is too high."); // 2 hands * double down = 4 bets max
+	
         if (payout != 0) {
             msg.sender.transfer(payout);
+            lossCounter += 1; // increment circuit breaker
+        } else {
+            lossCounter = 0; // reset circuit breaker
         }
+
+	// try circuit breaker
+	if (lossCounter >= lossLimit) { stopLoss = true; }
+
+	// update max bet
+        maxBet = SafeMath.div(address(this).balance, 200);
+	
         emit Result(game.id, game.round, payout, game.player.score, game.dealer.score);
     }
 
-    event LogDebugPayout(uint playerScore, uint dealerScore);
     /// @dev [Module 9, Lesson 3] Preventing integer overflow with SafeMath
     /// @dev TODO: Properly handle when dealer has Blackjack (i.e., refund doubles and splits?)
     /// @param game The concluded Blackjack game
@@ -337,12 +363,9 @@ contract Blackjack is Ownable, usingProvable {
     /// @return payout Amount of ether to transfer to player for winnings
     function calculatePayout(Game storage game, Player storage player, bool dealerHasBJ) private returns (uint256 payout) {
         Player memory dealer = game.dealer;
-        // Player busted
-        emit LogDebugPayout(player.score, dealer.score);
-        // Player has BlackJack but dealer does not.
+
         if (player.score == 21 && player.hand.length == 2 && !dealerHasBJ) {
-            // Pays 3 to 2
-            payout = SafeMath.div(SafeMath.mul(player.bet, 5), 2);
+            payout = SafeMath.div(SafeMath.mul(player.bet, 5), 2); // Blackjack pays 3:2
         } else if (player.score > dealer.score || dealer.score >= 21) {
             payout = SafeMath.mul(SafeMath.add(player.bet, player.doubleDownBet), 2);
         } else if (player.score == dealer.score) {
