@@ -20,6 +20,7 @@
   },
   "homepage": "https://github.com/0x9060/blackjack#readme",
   "dependencies": {
-    "@openzeppelin/contracts": "^3.2.0"
+    "@openzeppelin/contracts": "^3.2.0",
+    "@truffle/hdwallet-provider": "^1.2.0"
   }
 }
