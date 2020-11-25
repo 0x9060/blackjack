@@ -23,49 +23,48 @@ contract TestBlackjack {
         ploppy = new UserAgent(casino);
         squatter = new UserAgent(casino);
 
-        address(ploppy).transfer(1 ether);
+        address(ploppy).transfer(10000 wei);
     }
 
-    /// newRound Tests
-    
-    // test for hand length
-    function testNewRoundDealerHasOneCard() public {
-	bool r = ploppy.newRound(100 wei);
-        Assert.equal(uint(1), uint(0), "Dealer must be showing only one card");
-    }
+    ///// newRound Tests
 
-    function testNewRoundPlayerHasTwoCards() public {}
+    //// test for hand length
+    //function testNewRoundDealerHasOneCard() public {
+    //    bool r = ploppy.newRound(100 wei);
+    //    Assert.equal(uint(1), uint(0), "Dealer must be showing only one card");
+    //}
 
-
-    /// doubleDown Tests
-
-    // test for required bet
-    function testCannotDoubleForMoreThanTwiceBet() public {}
-    /// @dev this is a known bug
-    function testCanDoubleForExactlyTwiceBet() public {}
-    // test for double after hit
-    function testCannotDoubleAfterHit() public {
-	ploppy.newRound(100 wei);
-	bool r = ploppy.doubleDown(100 wei);
-	Assert.isTrue(r, "Can only double down before hitting");
-    }
+    //function testNewRoundPlayerHasTwoCards() public {}
 
 
-    /// hit Tests
+    ///// doubleDown Tests
 
-    // test for hand length
-    function testOneHitPlayerHasThreeCards() public {}
+    //// test for required bet
+    //function testCannotDoubleForMoreThanTwiceBet() public {}
+    //function testCanDoubleForExactlyTwiceBet() public {}
+    //// test for double after hit
+    //function testCannotDoubleAfterHit() public {
+    //  ploppy.newRound(100 wei);
+    //  bool r = ploppy.doubleDown(100 wei);
+    //  Assert.isTrue(r, "Can only double down before hitting");
+    //}
 
-    // test for busting
-    function testTwentyHitsWillBust() public {}
 
-    /// stand Tests
+    ///// hit Tests
 
-    // test for hand length
-    function testStandingDoesNotChangeHand() public {}
+    //// test for hand length
+    //function testOneHitPlayerHasThreeCards() public {}
 
-    // payout Tests
-    function testCasinoPaysOutIfItShould() public {} // should make this draw ~10 games or so and test results
+    //// test for busting
+    //function testTwentyHitsWillBust() public {}
+
+    ///// stand Tests
+
+    //// test for hand length
+    //function testStandingDoesNotChangeHand() public {}
+
+    //// payout Tests
+    //function testCasinoPaysOutIfItShould() public {} // should make this draw ~10 games or so and test results
 
 }
 
@@ -76,9 +75,9 @@ contract TestBlackjack {
 contract UserAgent {
 
     Blackjack thisCasino;
-    
+
     constructor(Blackjack _casino) public payable {
-	thisCasino = _casino;
+        thisCasino = _casino;
     }
 
     fallback() external {}
@@ -90,17 +89,17 @@ contract UserAgent {
     }
 
     function newRound(uint bet) public returns(bool) {
-        (bool success, ) = address(thisCasino).call.value(bet)(abi.encodeWithSignature("newRound()"));
+        (bool success, ) = address(thisCasino).call(abi.encodeWithSignature("newRound({value: uint256})", bet));
         return success;
     }
 
     function split(uint bet) public returns(bool) {
-        (bool success, ) = address(thisCasino).call.value(bet)(abi.encodeWithSignature("split()"));
+        (bool success, ) = address(thisCasino).call(abi.encodeWithSignature("split({value: uint256)", bet));
         return success;
     }
 
     function doubleDown(uint bet) public returns(bool) {
-        (bool success, ) = address(thisCasino).call.value(bet)(abi.encodeWithSignature("doubleDown()"));
+        (bool success, ) = address(thisCasino).call(abi.encodeWithSignature("doubleDown({value: uint256})", bet));
         return success;
     }
 

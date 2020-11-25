@@ -301,6 +301,7 @@ contract Blackjack is Ownable, usingProvable {
         if((game.stage == Stage.PlayHand && game.splitPlayer.hand.length == 0)
            || game.stage == Stage.PlaySplitHand
            ) {
+            nextStage(game);
             concludeGame(game);
         } else {
             nextStage(game);
