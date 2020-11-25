@@ -1,3 +1,7 @@
+# Hidden files
+.*
+!/.gitignore
+
 # Packages
 node_modules/*
 client/node_modules/*
