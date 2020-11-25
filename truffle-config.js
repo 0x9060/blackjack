@@ -1,13 +1,11 @@
 const path = require("path");
 
-
-
+// Deploying to Rinkeby using Infura
+const fs = require('fs');
+const mnemonic = fs.readFileSync(".metamaskWalletMnemonic").toString().trim();
 const HDWalletProvider = require('@truffle/hdwallet-provider');
 const infuraURL = 'https://rinkeby.infura.io/v3/7291b19128f64740ac9da315b3e0bc91'
 const infuraKey = fs.readFileSync(".infuraProjectSecret").toString().trim();
-
-const fs = require('fs');
-const mnemonic = fs.readFileSync(".metamaskWalletMnemonic").toString().trim();
 
 module.exports = {
     // See <http://truffleframework.com/docs/advanced/configuration>
