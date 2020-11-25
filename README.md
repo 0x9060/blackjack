@@ -82,10 +82,8 @@ See [design_pattern_decisions.md](design_pattern_decisions.md "Design pattern de
 
 See [avoiding_common_attacks.md](avoiding_common_attacks.md "Avoiding common attacks") for details on the following:
 - Integer overflow/underflow
-- Reentrancy
-- Deck shuffling randomness 
 - Card reveal scheme
-- Payment strategy
+- Deck shuffling randomness 
 
 ??????? GAS EXPLOIT ??????
 IS IT POSSIBLE TO PREVENT BUSTING BY CAREFULLY SELECTING THE GAS LIMIT (busting costs more gas b/c of more operations)
@@ -138,7 +136,8 @@ This is a `truffle` project using a `React` front-end, built from the truffle re
 High level plans for major changes to project, most not yet started.
 
 - Use oracle for RNG on the fly (e.g., from Wolfram Alfa using `provableAPI`).
-- Separate betting and action functions.
+- Provide a gas proxy such that the player only interacts with MetaMask when placing bets (i.e., the house pays the gas for hitting and standing).
+- Separate betting and action functions entirely.
 - Fix refunds for dealer Blackjack, other payout quirks - write a lot more payment tests.
 - Gas optimization
 - General refactoring

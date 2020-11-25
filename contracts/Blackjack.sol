@@ -361,7 +361,7 @@ contract Blackjack is Ownable, usingProvable {
     /// @param game The concluded Blackjack game
     /// @param player A player from the game to calculate the payout for
     /// @return payout Amount of ether to transfer to player for winnings
-    function calculatePayout(Game storage game, Player storage player, bool dealerHasBJ) private returns (uint256 payout) {
+    function calculatePayout(Game storage game, Player storage player, bool dealerHasBJ) private view returns (uint256 payout) {
         Player memory dealer = game.dealer;
 
         if (player.score == 21 && player.hand.length == 2 && !dealerHasBJ) {
