@@ -10,7 +10,7 @@ import "../contracts/Blackjack.sol";
 /// @notice This Blackjack contract has known security risks. Some tests in here are known to be failing to successfully isolate such security risks.
 contract TestBlackjack {
 
-    uint public initialBalance = 10 ether;
+    uint public initialBalance = 2 ether;
     Blackjack casino;
     UserAgent ploppy;
     UserAgent squatter;
@@ -23,7 +23,7 @@ contract TestBlackjack {
         ploppy = new UserAgent(casino);
         squatter = new UserAgent(casino);
 
-        address(ploppy).transfer(5 ether);
+        address(ploppy).transfer(1 ether);
     }
 
     /// newRound Tests
@@ -44,7 +44,11 @@ contract TestBlackjack {
     /// @dev this is a known bug
     function testCanDoubleForExactlyTwiceBet() public {}
     // test for double after hit
-    function testCannotDoubleAfterHit() public {}
+    function testCannotDoubleAfterHit() public {
+	ploppy.newRound(100 wei);
+	bool r = ploppy.doubleDown(100 wei);
+	Assert.isTrue(r, "Can only double down before hitting");
+    }
 
 
     /// hit Tests
