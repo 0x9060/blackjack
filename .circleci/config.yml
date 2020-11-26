@@ -3,7 +3,7 @@ jobs:
   build:
     docker:
       # specify the version you desire here
-      - image: circleci/node:9.11.1
+      - image: circleci/node:10.23.0
 
       # Specify service dependencies here if necessary
       # documented at https://circleci.com/docs/2.0/circleci-images/
