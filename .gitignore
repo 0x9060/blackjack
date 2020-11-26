@@ -1,6 +1,8 @@
 # Hidden files
 .*
 !/.gitignore
+!/.gitattributes
+!/.circleci
 
 # Packages
 node_modules/*
