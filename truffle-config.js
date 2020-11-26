@@ -1,6 +1,6 @@
 const path = require("path");
 
-// Deploying to Rinkeby using Infura
+//// Deploying to Rinkeby using Infura
 //const fs = require('fs');
 //const mnemonic = fs.readFileSync(".metamaskWalletMnemonic").toString().trim();
 //const HDWalletProvider = require('@truffle/hdwallet-provider');
@@ -29,11 +29,11 @@ module.exports = {
             gas: 5500000,
         },
 
-        //rinkeby: {
-        //    provider: () => new HDWalletProvider(mnemonic, infuraURL),
-        //    network_id: 4,       // Rinkeby's network id
-        //    gas: 5500000,
-        //},
+//        rinkeby: {
+//            provider: () => new HDWalletProvider(mnemonic, infuraURL),
+//            network_id: 4,       // Rinkeby's network id
+//            gas: 5500000,
+//        },
 
     },
 };

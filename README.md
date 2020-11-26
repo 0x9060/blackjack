@@ -52,7 +52,7 @@ npm run start
 
 ## Deployed addresses
 
-See [deployed_addresses.md](deployed_addresses.md "Deployed addresses") for details on where to find this contract publicly.
+Commit [88e643c](https://github.com/0x9060/blackjack/commit/88e643c34dce8b84a149a74a6ca287b827a7c07d) was published to a contract on `Rinkeby` at address [0xC1F98Bf8e8308Add2757D0e6bB28EA190e59755c](https://rinkeby.etherscan.io/address/0xc1f98bf8e8308add2757d0e6bb28ea190e59755c). See [deployed_addresses.md](deployed_addresses.md "Deployed addresses") for more details.
 
 ## Game rules
 
@@ -88,12 +88,15 @@ This is a `truffle` project using a `React` front-end, built from the truffle re
 
 ```
 .
+├── avoiding_common_attacks.md
 ├── client
 │   ├── package.json
 │   ├── package-lock.json
 │   ├── public
 │   │   ├── favicon.ico
 │   │   ├── index.html
+│   │   ├── logo192.png
+│   │   ├── logo512.png
 │   │   ├── manifest.json
 │   │   └── robots.txt
 │   ├── README.md
@@ -103,7 +106,16 @@ This is a `truffle` project using a `React` front-end, built from the truffle re
 │   │   ├── App.test.js
 │   │   ├── contracts
 │   │   │   ├── Blackjack.json
-│   │   │   └── Migrations.json
+│   │   │   ├── Buffer.json
+│   │   │   ├── CBOR.json
+│   │   │   ├── Context.json
+│   │   │   ├── Migrations.json
+│   │   │   ├── OracleAddrResolverI.json
+│   │   │   ├── Ownable.json
+│   │   │   ├── ProvableI.json
+│   │   │   ├── SafeMath.json
+│   │   │   ├── solcChecker.json
+│   │   │   └── usingProvable.json
 │   │   ├── getWeb3.js
 │   │   ├── index.css
 │   │   ├── index.js
@@ -112,14 +124,20 @@ This is a `truffle` project using a `React` front-end, built from the truffle re
 │   └── yarn.lock
 ├── contracts
 │   ├── Blackjack.sol
-│   └── Migrations.sol
+│   ├── Migrations.sol
+│   └── provableAPI.sol
+├── deployed_addresses.md
+├── design_pattern_decisions.md
 ├── LICENSE
 ├── migrations
 │   ├── 1_initial_migration.js
 │   └── 2_deploy_contracts.js
+├── package.json
 ├── package-lock.json
 ├── README.md
 ├── test
+│   ├── blackjack.test.js
+│   ├── exceptionsHelpers.js
 │   └── TestBlackjack.sol
 └── truffle-config.js
 
