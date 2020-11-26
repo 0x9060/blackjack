@@ -12,27 +12,33 @@ contract('Blackjack', function(accounts) {
 
     before(async () => {
         instance = await Blackjack.new()
-	instance.send(web3.utils.toWei("1", "ether"))
+        instance.send(web3.utils.toWei("1", "ether"))
     })
 
+    /// newRound Tests
     it("should have one dealer card and two player cards for a new round", async() => {
         await instance.newRound({from: alice, value: 100})
-	const dealer = await instance.getDealerState({from: alice})
-	const player = await instance.getPlayerState({from: alice})
-	assert.equal(dealer.hand.length, 1, 'Dealer should have only one card to start new games')
-	assert.equal(player.hand.length, 2, 'Player should have only two cards to start new games')
+        const dealer = await instance.getDealerState({from: alice})
+        const player = await instance.getPlayerState({from: alice})
+        assert.equal(dealer.hand.length, 1, 'Dealer should have only one card to start new games')
+        assert.equal(player.hand.length, 2, 'Player should have only two cards to start new games')
+    })
+
+    it("should only be able to act in ones own game", async() => {
+        await instance.newRound({from: alice, value: 100})
+        await catchRevert(instance.hit({from: bob}))
     })
 
     /// doubleDown Tests
     it("should not be able to double down after hitting", async() => {
         await instance.newRound({from: alice, value: 100})
-	await instance.hit({from: alice})
+        await instance.hit({from: alice})
         await catchRevert(instance.doubleDown({from: alice}))
     })
 
     it("should not be able to double down after standing", async() => {
         await instance.newRound({from: alice, value: 100})
-	await instance.stand({from: alice})
+        await instance.stand({from: alice})
         await catchRevert(instance.doubleDown({from: alice}))
     })
 
@@ -59,36 +65,52 @@ contract('Blackjack', function(accounts) {
     /// split Tests
     it("should not be able to split after hitting", async() => {
         await instance.newRound({from: alice, value: 100})
-	await instance.hit({from: alice})
+        await instance.hit({from: alice})
         await catchRevert(instance.split({from: alice}))
     })
 
     it("should not be able to split after standing", async() => {
         await instance.newRound({from: alice, value: 100})
-	await instance.stand({from: alice})
+        await instance.stand({from: alice})
         await catchRevert(instance.split({from: alice}))
+
+    })
+
+    /// hit Tests
+    it("should have three cards after hitting once", async() => {
+        await instance.newRound({from: alice, value: 100})
+        const dealer = await instance.getDealerState({from: alice})
+        var player = await instance.getPlayerState({from: alice})
+        assert.equal(dealer.hand.length, 1, 'Dealer should have only one card to start new games')
+        assert.equal(player.hand.length, 2, 'Player should have only two cards to start new games')
+        await instance.hit({from: alice})
+        player = await instance.getPlayerState({from: alice})
+        assert.equal(player.hand.length, 3, 'Player should have three cards after hitting once')
+    })
+
+    // test for busting
+    it("should not be able to hit after busting", async() => {
+        await instance.newRound({from: alice, value: 100})
+
+        do {
+            await instance.hit({from: alice})
+            var player = await instance.getPlayerState({from: alice})
+        } while(player.handScore <= 21)
+
+        await catchRevert(instance.hit({from: alice}))
+    })
+
+    //    /// stand Tests
+    it("should have two cards when standing", async() => {
+        await instance.newRound({from: alice, value: 100})
+        var dealer = await instance.getDealerState({from: alice})
+        const player = await instance.getPlayerState({from: alice})
+        assert.equal(dealer.hand.length, 1, 'Dealer should have only one card to start new games')
+        assert.equal(player.hand.length, 2, 'Player should have only two cards to start new games')
+        await instance.stand({from: alice})
+        dealer = await instance.getDealerState({from: alice})
+        assert.equal(dealer.hand.length > 1, true, 'Dealer should have more than one card after concluding game')
+        assert.equal(player.hand.length, 2, 'Player should still have only two cards')
     })
 
 })
-
-
-
-
-
-
-//    /// hit Tests
-//                                                                                                              
-//    // test for hand length
-//    function testOneHitPlayerHasThreeCards() public {}
-//                                                                                                              
-//    // test for busting
-//    function testTwentyHitsWillBust() public {}
-//                                                                                                              
-//    /// stand Tests
-//                                                                                                              
-//    // test for hand length
-//    function testStandingDoesNotChangeHand() public {}
-//                                                                                                              
-//    // payout Tests
-//    function testCasinoPaysOutIfItShould() public {} // should make this draw ~10 games or so and test results
-                                                                                                              

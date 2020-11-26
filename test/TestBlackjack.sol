@@ -26,46 +26,8 @@ contract TestBlackjack {
         address(ploppy).transfer(10000 wei);
     }
 
-    ///// newRound Tests
-
-    //// test for hand length
-    //function testNewRoundDealerHasOneCard() public {
-    //    bool r = ploppy.newRound(100 wei);
-    //    Assert.equal(uint(1), uint(0), "Dealer must be showing only one card");
-    //}
-
-    //function testNewRoundPlayerHasTwoCards() public {}
-
-
-    ///// doubleDown Tests
-
-    //// test for required bet
-    //function testCannotDoubleForMoreThanTwiceBet() public {}
-    //function testCanDoubleForExactlyTwiceBet() public {}
-    //// test for double after hit
-    //function testCannotDoubleAfterHit() public {
-    //  ploppy.newRound(100 wei);
-    //  bool r = ploppy.doubleDown(100 wei);
-    //  Assert.isTrue(r, "Can only double down before hitting");
-    //}
-
-
-    ///// hit Tests
-
-    //// test for hand length
-    //function testOneHitPlayerHasThreeCards() public {}
-
-    //// test for busting
-    //function testTwentyHitsWillBust() public {}
-
-    ///// stand Tests
-
-    //// test for hand length
-    //function testStandingDoesNotChangeHand() public {}
-
     //// payout Tests
-    //function testCasinoPaysOutIfItShould() public {} // should make this draw ~10 games or so and test results
-
+    //function testHere() public {}
 }
 
 
@@ -121,5 +83,4 @@ contract UserAgent {
 
     /// @dev need to fix this return
     //function getGameState() public returns(bool) {}
-
 }
