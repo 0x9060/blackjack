@@ -1,51 +1,32 @@
 version: 2
-
-aliases:
-  - &defaults
-    docker:
-      - image: circleci/node:10
-
-  - &cache_key_node_modules
-    key: v1-node_modules-{{ checksum "package-lock.json" }}
-
 jobs:
-  dependencies:
-    <<: *defaults
+  build:
+    docker:
+      # specify the version you desire here
+      - image: circleci/node:9.11.1
+
+      # Specify service dependencies here if necessary
+      # documented at https://circleci.com/docs/2.0/circleci-images/
+      - image: trufflesuite/ganache-cli
+        command: ganache-cli -i 1234 -e 100000000000 -l 4700038
+
+    working_directory: ~/repo
+
     steps:
       - checkout
+
+      # Download and cache dependencies
       - restore_cache:
-          <<: *cache_key_node_modules
-      - run:
-          name: Install npm dependencies
-          command: |
-            if [ ! -d node_modules ]; then
-              npm ci
-            fi
-      - persist_to_workspace:
-          root: .
-          paths:
-            - node_modules
-            - build
+          keys:
+          - v1-dependencies-{{ checksum "package.json" }}
+          # fallback to using the latest cache if no exact match is found
+          - v1-dependencies-
+
+      - run: npm i
+
       - save_cache:
           paths:
             - node_modules
-          <<: *cache_key_node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
 
-  test:
-    <<: *defaults
-    steps:
-      - checkout
-      - attach_workspace:
-          at: .
-      - run:
-          name: Unit tests
-          command: npm test
-
-workflows:
-  version: 2
-  everything:
-    jobs:
-      - dependencies
-      - test:
-          requires:
-            - dependencies
+      - run: npm test # triggers truffle test

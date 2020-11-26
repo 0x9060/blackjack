@@ -8,13 +8,11 @@ const path = require("path");
 //const infuraKey = fs.readFileSync(".infuraProjectSecret").toString().trim();
 
 module.exports = {
-    // See <http://truffleframework.com/docs/advanced/configuration>
-    // to customize your Truffle configuration!
     contracts_build_directory: path.join(__dirname, "client/src/contracts"),
 
     compilers: {
         solc: {
-            version: "0.6.12",    // Fetch exact version from solc-bin (default: truffle's version)
+            version: "0.6.12",
             optimizer: {
                 enabled: true,
                 runs: 200,
