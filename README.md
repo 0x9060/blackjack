@@ -2,13 +2,13 @@
 
 Blackjack game run on the Ethereum blockchain using `web3.js` and React web framework.
 
-Planning to put this on mainnet and stake it for some small amount, and see what happens, after thoroughly testing. For now, this project is run locally on a development server at http://127.0.0.1:3000.
+Planning to put this on mainnet and stake it for some small amount, and see what happens, after thoroughly testing. For now, this project is run locally on a development server at http://127.0.0.1:3000 and the contract is also deployed to *Rinkeby*.
 
-### Getting started
+## Getting started
 
 This project and guide are built and tested on an Ubuntu 18.04 virtual machine. I'm using `ganache-cli` for local Ethereum blockchain deployment and `Metamask` for wallet management. 
 
-#### Prerequisites
+### Prerequisites
 
 First install required software, `node.js` and `npm`, `Solidity` compiler, `Truffle` suite, and `Ganache` if you don't already have these. 
 
@@ -24,7 +24,7 @@ sudo npm install -g truffle
 sudo npm install -g ganache-cli
 ```
 
-#### Installation
+### Installation
 
 ```
 mkdir ~/blackjack
@@ -39,8 +39,7 @@ cd ~/blackjack
 npm install
 ```
 
-
-#### Starting up
+### Starting up
 
 First run a local test Ethereum blockchain with `ganache-cli`. Then connect `Metamask` to the local blockchain using the provided **mnemonic**. Then run the following.
 
@@ -51,44 +50,39 @@ cd client
 npm run start
 ```
 
-### Deployed addresses
+## Deployed addresses
 
 See [deployed_addresses.md](deployed_addresses.md "Deployed addresses") for details on where to find this contract publicly.
 
-### Game rules
+## Game rules
 
 - Single deck
 - Shuffle after each hand
-- Dealer hits on soft 17
+- Dealer stands on soft 17
 
 - Double any first two cards
 - Double after split
 - Split only once
-- Cannot hit split aces
+- Can hit split aces
 
 - Blackjack pays 3:2
 - Late surrender refunds 1:2
 - No Insurance
 
-### Contract design
+## Contract design
 
 See [design_pattern_decisions.md](design_pattern_decisions.md "Design pattern decisions") for details on the following:
-- Access control
-- Upgradeability 
+- Access control and mortality
 - Circuit breakers
-- Mortality
 
-### Contract security
+## Contract security
 
 See [avoiding_common_attacks.md](avoiding_common_attacks.md "Avoiding common attacks") for details on the following:
 - Integer overflow/underflow
 - Card reveal scheme
 - Deck shuffling randomness 
 
-??????? GAS EXPLOIT ??????
-IS IT POSSIBLE TO PREVENT BUSTING BY CAREFULLY SELECTING THE GAS LIMIT (busting costs more gas b/c of more operations)
-
-### Project structure
+## Project structure
 
 This is a `truffle` project using a `React` front-end, built from the truffle react box. The project directory is constructed as follows:
 
@@ -131,12 +125,13 @@ This is a `truffle` project using a `React` front-end, built from the truffle re
 
 ```
 
-### TO-DO
+## TO-DO
 
 High level plans for major changes to project, most not yet started.
 
 - Use oracle for RNG on the fly (e.g., from Wolfram Alfa using `provableAPI`).
-- Provide a gas proxy such that the player only interacts with MetaMask when placing bets (i.e., the house pays the gas for hitting and standing).
+- Provide a gas proxy such that the player only interacts with MetaMask when placing bets (i.e., the house pays the gas for hitting and standing). Should also mitigate risk of leaking information through OOG reverts.
+- Implement upgradeability using a proxy contract.
 - Separate betting and action functions entirely.
 - Fix refunds for dealer Blackjack, other payout quirks - write a lot more payment tests.
 - Gas optimization
