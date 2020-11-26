@@ -245,13 +245,13 @@ contract Blackjack is Ownable, usingProvable {
 
         if (game.stage == Stage.PlayHand) {
             drawCard(game, game.player);
-            SafeMath.add(game.player.doubleDownBet, msg.value);
+            game.player.doubleDownBet = SafeMath.add(game.player.doubleDownBet, msg.value);
             game.player.score = recalculate(game.player);
 
 
         } else if (game.stage == Stage.PlaySplitHand) {
             drawCard(game, game.splitPlayer);
-            SafeMath.add(game.splitPlayer.doubleDownBet, msg.value);
+            game.splitPlayer.doubleDownBet = SafeMath.add(game.splitPlayer.doubleDownBet, msg.value);
             game.splitPlayer.score = recalculate(game.splitPlayer);
         }
 
@@ -418,12 +418,14 @@ contract Blackjack is Ownable, usingProvable {
     /// @dev Also add bet (and original) to return
     /// @return gameId ID for the current Blackjack game
     /// @return startTime Time the current Blackjack game began
+    /// @return gameMaxBet Max bet allowed to be placed for new game
     /// @return round Number of round of Blackjack game played
     /// @return stage Stage of the Blackjack game
     function getGameState() public view
         returns (
                  uint256 gameId,
                  uint64 startTime,
+                 uint256 gameMaxBet,
                  uint64 round,
                  Stage stage
                  )
@@ -431,6 +433,7 @@ contract Blackjack is Ownable, usingProvable {
         Game storage game = games[msg.sender];
         gameId = game.id;
         startTime = game.startTime;
+        gameMaxBet = maxBet;
         round = game.round;
         stage = game.stage;
     }

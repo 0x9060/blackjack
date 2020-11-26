@@ -95,7 +95,7 @@ contract('Blackjack', function(accounts) {
         do {
             await instance.hit({from: alice})
             var player = await instance.getPlayerState({from: alice})
-        } while(player.handScore <= 21)
+        } while(player.handScore < 21)
 
         await catchRevert(instance.hit({from: alice}))
     })

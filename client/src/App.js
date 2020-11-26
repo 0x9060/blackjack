@@ -35,7 +35,8 @@ class App extends Component {
             );
             // Set web3, accounts, and contract to the state, and then proceed with an
             // example of interacting with the contract's methods.
-            this.setState({ web3, playerAccount, game: gameInstance });
+	    const responseGame = await gameInstance.methods.getGameState().call();
+            this.setState({ web3, playerAccount, game: gameInstance, maxBet: responseGame.gameMaxBet });
 
         } catch (error) {
             // Catch any errors for any of the above operations.
@@ -53,10 +54,11 @@ class App extends Component {
 
         const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
-	const responseGame = await game.methods.getGameState().call();
+        const responseGame = await game.methods.getGameState().call();
 
         this.setState({
-	    stage: responseGame.stage,
+            stage: responseGame.stage,
+	    maxBet: responseGame.gameMaxBet,
             dealerHand: responseDealer.hand,
             playerHand: responsePlayer.hand,
             splitHand: responsePlayer.splitHand,
@@ -77,10 +79,11 @@ class App extends Component {
 
         const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
-	const responseGame = await game.methods.getGameState().call();
+        const responseGame = await game.methods.getGameState().call();
 
         this.setState({
-	    stage: responseGame.stage,
+            stage: responseGame.stage,
+	    maxBet: responseGame.gameMaxBet,
             dealerHand: responseDealer.hand,
             playerHand: responsePlayer.hand,
             splitHand: responsePlayer.splitHand,
@@ -101,10 +104,11 @@ class App extends Component {
 
         const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
-	const responseGame = await game.methods.getGameState().call();
+        const responseGame = await game.methods.getGameState().call();
 
         this.setState({
-	    stage: responseGame.stage,
+            stage: responseGame.stage,
+	    maxBet: responseGame.gameMaxBet,
             dealerHand: responseDealer.hand,
             playerHand: responsePlayer.hand,
             splitHand: responsePlayer.splitHand,
@@ -125,10 +129,11 @@ class App extends Component {
 
         const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
-	const responseGame = await game.methods.getGameState().call();
+        const responseGame = await game.methods.getGameState().call();
 
         this.setState({
-	    stage: responseGame.stage,
+            stage: responseGame.stage,
+	    maxBet: responseGame.gameMaxBet,
             dealerHand: responseDealer.hand,
             playerHand: responsePlayer.hand,
             splitHand: responsePlayer.splitHand,
@@ -150,10 +155,11 @@ class App extends Component {
 
         const responseDealer = await game.methods.getDealerState().call();
         const responsePlayer = await game.methods.getPlayerState().call();
-	const responseGame = await game.methods.getGameState().call();
+        const responseGame = await game.methods.getGameState().call();
 
         this.setState({
-	    stage: responseGame.stage,
+            stage: responseGame.stage,
+	    maxBet: responseGame.gameMaxBet,
             dealerHand: responseDealer.hand,
             playerHand: responsePlayer.hand,
             splitHand: responsePlayer.splitHand,
@@ -183,13 +189,19 @@ class App extends Component {
             splitButton = <button onClick={this.split.bind(this)}>Split</button>;
         }
 
-        const playerSplitCards = this.state.splitHand.map(function(card,i){
+        const splitPlayerCards = this.state.splitHand.map(function(card,i){
             return <td align="center" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
         });
 
-        let splitHand;
-        if (hasSplit) {
-            splitHand = <div><table align="center"><tbody><tr>{playerSplitCards}</tr></tbody></table></div>;
+        let splitPlayerScore;
+        const playSplitHand = this.state.splitHand.length > 0;
+        if (playSplitHand) {
+            splitPlayerScore = <td><i>Split Hand Score: {this.state.splitHandScore}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
+        }
+
+        let splitPlayerBet;
+        if (playSplitHand) {
+            splitPlayerBet = <td><i>Bet: {parseInt(this.state.splitBet) + parseInt(this.state.splitDoubleDownBet)}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
         }
 
         const canDoubleDown = ((this.state.playerHand.length === 2) || (this.state.splitHand.length === 2));
@@ -208,33 +220,49 @@ class App extends Component {
         });
 
         const playerCards = this.state.playerHand.map(function(card,i){
-            return <td align="center" fontSize="40px" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
+            return <td align="center" border="20px" key={i}> {rankStrings[card % 13]}{suitStrings[card % 4]} </td>;
         });
 
-        let playerScore;
         const playHand = this.state.playerHand.length > 0;
-        if (playHand) {
-            playerScore = <td><i>Hand Score: {this.state.handScore}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
-        }
-
+        let dealerScore;
+        let playerScore;
         let playerBet;
         if (playHand) {
+            dealerScore = <td><i>Dealer Score: {this.state.dealerScore}</i></td>;
+            playerScore = <td><i>Hand Score: {this.state.handScore}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
             playerBet = <td><i>Bet: {parseInt(this.state.bet) + parseInt(this.state.doubleDownBet)}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
         }
 
         return (
                 <div className="App">
                 <h1>Blackjack dApp</h1>
-                <br/><br/>
-                <div><h3>Dealer:</h3>
-                <table align="center"><tbody><tr>{dealerCards}</tr></tbody></table></div>
+                <br/>
+
+		<div>
+
+		<h3>Dealer:</h3>
+
+		<table align="center"><tbody><tr>{dealerCards}</tr></tbody></table>
+                <table align="center"><tbody><tr>{dealerScore}</tr></tbody></table>
+
+	    </div>
+		
                 <br/><br/>
                 <div><h3>Your Cards:</h3>
-                <table align="center"><tbody><tr>{playerScore}{playerBet}{playerCards}</tr>
+
+                <table align="center"><tbody>
+                <tr>{playerCards}</tr>
                 </tbody></table>
+
+                <table align="center"><tbody>
+                <tr>{playerScore}{playerBet}</tr>
+                </tbody></table>
+
                 <br/><br/>
 
-            {splitHand}
+                <table align="center"><tbody><tr>{splitPlayerCards}</tr></tbody></table>
+                <table align="center"><tbody><tr>{splitPlayerScore}{splitPlayerBet}</tr></tbody></table>
+
             </div>
                 <br/>
 
@@ -249,22 +277,21 @@ class App extends Component {
 
             {splitButton}
 
-                <br/><br/><br/><br/>
+                <br/><br/><br/>
 
             Place your bet: <input value={this.state.betSize} onChange={this.onChange}/> wei
                 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
                 <button onClick={this.newRound.bind(this)}>Deal</button>
                 <br/>
+                <div> Maximum bet: {this.state.maxBet} wei</div>
+                <br/>
                 <br/>
                 <i>(connected account: {this.state.playerAccount})</i>
                 <p/>
 
-                <br/>
                 <hr style={{height: 2}}/>
-                <br/>
 
-                <p>Blackjack Pays 3:2 {String.fromCharCode(9827)} Dealer Stands on Soft 17 {String.fromCharCode(9830)} No Insurance {String.fromCharCode(9829)} Double After Split {String.fromCharCode(9824)} No Resplit</p>
-
+                <p>Blackjack Pays 3:2 {String.fromCharCode(9827)} Dealer Stands on Soft 17 {String.fromCharCode(9829)} No Insurance {String.fromCharCode(9830)} Double After Split {String.fromCharCode(9824)} No Resplit</p>
 
             </div>
         );
