@@ -8,7 +8,7 @@ jobs:
       # Specify service dependencies here if necessary
       # documented at https://circleci.com/docs/2.0/circleci-images/
       - image: trufflesuite/ganache-cli
-        command: ganache-cli -i 1234 -e 100000000000 -l 4700038
+        command: ganache-cli -i 1234 -e 100000000000 -l 5500000
 
     working_directory: ~/repo
 
