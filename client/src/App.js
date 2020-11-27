@@ -194,14 +194,12 @@ class App extends Component {
         });
 
         let splitPlayerScore;
-        const playSplitHand = this.state.splitHand.length > 0;
-        if (playSplitHand) {
-            splitPlayerScore = <td><i>Split Hand Score: {this.state.splitHandScore}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
-        }
-
         let splitPlayerBet;
+        const playSplitHand = this.state.splitHand.length > 0;
+	if (this.state.splitHandScore > 21) {var splitHandStatus = " - Busted!";}
         if (playSplitHand) {
-            splitPlayerBet = <td><i>Bet: {parseInt(this.state.splitBet) + parseInt(this.state.splitDoubleDownBet)}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
+            splitPlayerScore = <td><i>Split Hand Score: {this.state.splitHandScore}<b>{splitHandStatus}</b>&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
+            splitPlayerBet = <td><i>Bet: {parseInt(this.state.splitBet) + parseInt(this.state.splitDoubleDownBet)} wei&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
         }
 
         const canDoubleDown = ((this.state.playerHand.length === 2) || (this.state.splitHand.length === 2));
@@ -224,13 +222,15 @@ class App extends Component {
         });
 
         const playHand = this.state.playerHand.length > 0;
+	if (this.state.handScore > 21) {var handStatus = " - Busted!";}
+	if (this.state.dealerScore > 21) {var dealerStatus = " - Busted!";}
         let dealerScore;
         let playerScore;
         let playerBet;
         if (playHand) {
-            dealerScore = <td><i>Dealer Score: {this.state.dealerScore}</i></td>;
-            playerScore = <td><i>Hand Score: {this.state.handScore}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
-            playerBet = <td><i>Bet: {parseInt(this.state.bet) + parseInt(this.state.doubleDownBet)}&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
+            dealerScore = <td><i>Dealer Score: {this.state.dealerScore}<b>{dealerStatus}</b></i></td>;
+            playerScore = <td><i>Hand Score: {this.state.handScore}<b>{handStatus}</b>&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
+            playerBet = <td><i>Bet: {parseInt(this.state.bet) + parseInt(this.state.doubleDownBet)} wei&nbsp;&nbsp;&nbsp;&nbsp;</i></td>;
         }
 
         return (
