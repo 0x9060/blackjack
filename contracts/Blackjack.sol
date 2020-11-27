@@ -132,7 +132,7 @@ contract Blackjack is Ownable, usingProvable {
     /// @dev seed should not be based on timestamp. This is a security risk and placeholder for now
     /// @dev Plan to split this into multiple functions such that placing bet is atomic before proceeding
     function newRound() public payable stopInEmergency {
-	require(msg.value <= maxBet, "Bet must be less than the max bet.");
+        require(msg.value <= maxBet, "Bet must be less than the max bet.");
 
         uint256 _seed;
         uint64 _now = uint64(block.timestamp);
@@ -313,14 +313,26 @@ contract Blackjack is Ownable, usingProvable {
     /// @param game The concluded Blackjack game
     /// @return bool Whether the dealer has Blackjack
     function drawDealerCards(Game storage game) private returns (bool) {
-        // Dealer must draw to 16 and stand on all 17's
-        while (game.dealer.score < 17) {
-            drawCard(game, game.dealer);
 
+        if (
+            (game.player.score > 21 && game.splitPlayer.hand.length == 0) ||
+            (game.player.score > 21 && game.splitPlayer.score > 21)
+            ) {
+            drawCard(game, game.dealer); // just draw once if player has busted
             if (game.dealer.score == 21 && game.dealer.hand.length == 2) {
                 return true;
             }
+        } else {
+            // Dealer must draw to 16 and stand on all 17's
+            while (game.dealer.score < 17) {
+                drawCard(game, game.dealer);
+
+                if (game.dealer.score == 21 && game.dealer.hand.length == 2) {
+                    return true;
+                }
+            }
         }
+
     }
 
     /// @dev [Module 9, Lesson 3] Preventing integer overflow with SafeMath
@@ -339,8 +351,8 @@ contract Blackjack is Ownable, usingProvable {
             payout = SafeMath.add(payout, calculatePayout(game, game.splitPlayer, dealerHasBJ) );
         }
 
-	require(payout <= SafeMath.mul(game.player.bet, 8), "Dealer error - payout is too high."); // 2 hands * double down = 4 bets max
-	
+        require(payout <= SafeMath.mul(game.player.bet, 8), "Dealer error - payout is too high."); // 2 hands * double down = 4 bets max
+
         if (payout != 0) {
             msg.sender.transfer(payout);
             lossCounter += 1; // increment circuit breaker
@@ -348,12 +360,12 @@ contract Blackjack is Ownable, usingProvable {
             lossCounter = 0; // reset circuit breaker
         }
 
-	// try circuit breaker
-	if (lossCounter >= lossLimit) { stopLoss = true; }
+        // try circuit breaker
+        if (lossCounter >= lossLimit) { stopLoss = true; }
 
-	// update max bet
+        // update max bet
         maxBet = SafeMath.div(address(this).balance, 200);
-	
+
         emit Result(game.id, game.round, payout, game.player.score, game.dealer.score);
     }
 
