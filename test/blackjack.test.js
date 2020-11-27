@@ -32,8 +32,11 @@ contract('Blackjack', function(accounts) {
     /// doubleDown Tests
     it("should not be able to double down after hitting", async() => {
         await instance.newRound({from: alice, value: 100})
-        await instance.hit({from: alice})
-        await catchRevert(instance.doubleDown({from: alice}))
+        const score = await instance.getPlayerState({from: alice}).handScore
+        if (score < 21) {
+            await instance.hit({from: alice})
+            await catchRevert(instance.doubleDown({from: alice}))
+        }
     })
 
     it("should not be able to double down after standing", async() => {
