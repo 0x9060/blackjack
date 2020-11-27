@@ -52,7 +52,7 @@ npm run start
 
 ## Deployed addresses
 
-Commit [88e643c](https://github.com/0x9060/blackjack/commit/88e643c34dce8b84a149a74a6ca287b827a7c07d) was published to a contract on `Rinkeby` at address [0xC1F98Bf8e8308Add2757D0e6bB28EA190e59755c](https://rinkeby.etherscan.io/address/0xc1f98bf8e8308add2757d0e6bb28ea190e59755c). See [deployed_addresses.md](deployed_addresses.md "Deployed addresses") for more details.
+Commit [d31c917](https://github.com/0x9060/blackjack/commit/d31c9175378587cd42907c2cdbc9762ae634d80a) was published to a contract on `Rinkeby` at address [Etherscan](https://rinkeby.etherscan.io/address/0xaF56258bD8BD29Bc37d77E2d886192eF20888A59). See [deployed_addresses.md](deployed_addresses.md "Deployed addresses") for more details.
 
 ## Game rules
 
