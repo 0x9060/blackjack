@@ -60,9 +60,7 @@ Connect the player's `ganache` account to the dApp when prompted via `Metamask`.
 
 ### Demo
 
-A demo of the above process can be viewed here:
-
-![Getting Started demo](https://github.com/0x9060/blackjack/demo.mp4 "Getting Started demo video")
+A ![Getting Started demo video](https://github.com/0x9060/blackjack/blob/master/demo.mp4 "Getting Started demo video") is provided in this repo, which includes all the above steps. The 8-minute video starts from scratch on a Ubuntu 18.04 system. Most of the duration are the setup steps, with dApp interaction beginning at the 6:22 mark.
 
 ## Deployed addresses
 
