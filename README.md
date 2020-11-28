@@ -13,42 +13,50 @@ This project and guide are built and tested on an Ubuntu 18.04 virtual machine. 
 First install required software, `node.js` and `npm`, `Solidity` compiler, `Truffle` suite, and `Ganache` if you don't already have these. 
 
 ```
-cd ~
-curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh
-sudo bash nodesource_setup.sh
-sudo apt install -y nodejs
-sudo add-apt-repository ppa:ethereum/ethereum
-sudo apt update
-sudo apt install -y solc
-sudo npm install -g truffle
-sudo npm install -g ganache-cli
+sudo add-apt-repository ppa:ethereum/ethereum -y && \
+sudo apt update && \
+sudo apt install -y solc git curl && \
+cd ~ && \
+curl -sL https://deb.nodesource.com/setup_10.x -o nodesource_setup.sh && \
+sudo bash nodesource_setup.sh && \
+sudo apt install -y nodejs && \
+sudo npm install -g truffle ganache-cli
 ```
 
 ### Installation
 
+Installing this project involves a `git` clone and a few `npm install` commands. For example, this installs the project in the `~/blackjack` directory.
+
 ```
-mkdir ~/blackjack
-
-...
-
-git clone ...
-
-...
-
-cd ~/blackjack
+mkdir ~/blackjack && \
+git clone https://github.com/0x9060/blackjack ~/blackjack && \
+cd ~/blackjack && \
+npm install && \
+cd ~/blackjack/client && \
 npm install
 ```
 
+I also use the browser wallet, [Metamask](https://addons.mozilla.org/en-US/firefox/addon/ether-metamask/).
+
 ### Starting up
 
-First run a local test Ethereum blockchain with `ganache-cli`. Then connect `Metamask` to the local blockchain using the provided **mnemonic**. Then run the following.
+First run a local test Ethereum blockchain with `ganache-cli`. Then connect `Metamask` to the local blockchain using **mnemonic** provided by `ganache`. Then run the following.
 
 ```
-truffle compile --all
+cd ~/blackjack && \
+truffle compile --all && \
+truffle test && \
 truffle migrate --reset
-cd client
+```
+
+Make note of the **blackjack** contract address. Select a `ganache` account (separate than the one used for playing) to fund the **blackjack** contract using the `fallback` function.
+
+```
+cd ~/blackjack/client && \
 npm run start
 ```
+
+Connect the player's `ganache` account to the dApp when prompted via `Metamask`.
 
 ## Deployed addresses
 
