@@ -58,6 +58,12 @@ npm run start
 
 Connect the player's `ganache` account to the dApp when prompted via `Metamask`.
 
+### Demo
+
+A demo of the above process can be viewed here:
+
+![Getting Started demo](https://github.com/0x9060/blackjack/demo.mp4 "Getting Started demo video")
+
 ## Deployed addresses
 
 Commit [d31c917](https://github.com/0x9060/blackjack/commit/d31c9175378587cd42907c2cdbc9762ae634d80a) was published to a contract on `Rinkeby` at address [Etherscan](https://rinkeby.etherscan.io/address/0xaF56258bD8BD29Bc37d77E2d886192eF20888A59). See [deployed_addresses.md](deployed_addresses.md "Deployed addresses") for more details.
