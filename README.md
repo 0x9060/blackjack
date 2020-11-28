@@ -10,7 +10,7 @@ This project and guide are built and tested on an Ubuntu 18.04 virtual machine. 
 
 ### Prerequisites
 
-First install required software, `node.js` and `npm`, `Solidity` compiler, `Truffle` suite, and `Ganache` if you don't already have these. 
+First install required software, `node.js` and `npm`, `Solidity` compiler, `Truffle` suite, and `Ganache` if you don't already have these. `Git` and `curl` are also required for acquiring software.
 
 ```
 sudo add-apt-repository ppa:ethereum/ethereum -y && \
@@ -103,8 +103,6 @@ This is a `truffle` project using a `React` front-end, built from the truffle re
 │   ├── public
 │   │   ├── favicon.ico
 │   │   ├── index.html
-│   │   ├── logo192.png
-│   │   ├── logo512.png
 │   │   ├── manifest.json
 │   │   └── robots.txt
 │   ├── README.md
